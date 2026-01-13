@@ -1,75 +1,77 @@
 from flask import Blueprint, request, jsonify, current_app
-from app.models.settlement import Settlement
-from app.models.user import User
-from app.middleware.auth import jwt_required_custom
 from bson import ObjectId
+from datetime import datetime
 
 settlements_bp = Blueprint('settlements', __name__)
 
 @settlements_bp.route('', methods=['POST'])
-@jwt_required_custom
 def create_settlement():
     data = request.get_json()
-    to_user_id = data.get('toUserId', '').strip()
+    if not data:
+        return jsonify({'error': 'Request body is required'}), 400
+        
+    from_user = data.get('fromUser', '').strip()
+    to_user = data.get('toUser', '').strip()
     amount = data.get('amount')
     
     # Validation
-    if not to_user_id:
-        return jsonify({'msg': 'Recipient user ID is required'}), 400
+    if not from_user or not to_user:
+        return jsonify({'error': 'From user and to user are required'}), 400
+    
+    if from_user == to_user:
+        return jsonify({'error': 'Cannot settle with yourself'}), 400
     
     try:
         amount = float(amount)
         if amount <= 0:
-            return jsonify({'msg': 'Amount must be positive'}), 400
+            return jsonify({'error': 'Amount must be positive'}), 400
     except (TypeError, ValueError):
-        return jsonify({'msg': 'Invalid amount'}), 400
+        return jsonify({'error': 'Invalid amount'}), 400
     
     try:
-        current_user_id = request.current_user_id
+        if not current_app.db:
+            return jsonify({'error': 'Database not available'}), 503
+            
+        settlements_collection = current_app.db.settlements
         
-        # Check if trying to settle with self
-        if current_user_id == to_user_id:
-            return jsonify({'msg': 'Cannot settle with yourself'}), 400
+        settlement_data = {
+            'fromUser': from_user,
+            'toUser': to_user,
+            'amount': amount,
+            'date': datetime.utcnow()
+        }
         
-        # Verify recipient exists
-        user_model = User(current_app.db)
-        recipient = user_model.find_by_id(to_user_id)
-        if not recipient:
-            return jsonify({'msg': 'Recipient user not found'}), 404
-        
-        settlement_model = Settlement(current_app.db)
-        settlement_id = settlement_model.create_settlement(
-            from_user_id=current_user_id,
-            to_user_id=to_user_id,
-            amount=amount
-        )
+        result = settlements_collection.insert_one(settlement_data)
         
         return jsonify({
-            '_id': str(settlement_id),
-            'fromUser': current_user_id,
-            'toUser': to_user_id,
-            'amount': amount
+            '_id': str(result.inserted_id),
+            'fromUser': from_user,
+            'toUser': to_user,
+            'amount': amount,
+            'message': 'Settlement created successfully'
         }), 201
         
     except Exception as e:
         current_app.logger.error(f'Create settlement error: {e}')
-        return jsonify({'msg': 'Server error'}), 500
+        return jsonify({'error': 'Failed to create settlement'}), 500
 
 @settlements_bp.route('', methods=['GET'])
-@jwt_required_custom
 def get_settlements():
     try:
-        settlement_model = Settlement(current_app.db)
-        settlements = settlement_model.get_user_settlements(request.current_user_id)
+        if not current_app.db:
+            return jsonify({'error': 'Database not available'}), 503
+            
+        settlements_collection = current_app.db.settlements
+        settlements = list(settlements_collection.find({}).sort('date', -1))
         
-        # Convert ObjectIds to strings
+        # Convert ObjectIds to strings and format dates
         for settlement in settlements:
             settlement['_id'] = str(settlement['_id'])
-            settlement['fromUser']['_id'] = str(settlement['fromUser']['_id'])
-            settlement['toUser']['_id'] = str(settlement['toUser']['_id'])
+            if 'date' in settlement:
+                settlement['date'] = settlement['date'].isoformat()
         
         return jsonify(settlements), 200
         
     except Exception as e:
         current_app.logger.error(f'Get settlements error: {e}')
-        return jsonify({'msg': 'Server error'}), 500
+        return jsonify({'error': 'Failed to fetch settlements'}), 500
