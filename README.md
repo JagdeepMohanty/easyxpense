@@ -1,12 +1,17 @@
-# SplitEasy - Expense Splitting Application
+# EasyXpense - Expense Splitting Application
 
 A modern expense splitting application built with React frontend and Python Flask backend, designed for Indian Rupee (INR) transactions.
+
+## 🌐 Live Application
+
+- **Frontend**: https://easyxpense.netlify.app
+- **Backend**: Deployed on Render
 
 ## 🏗️ Project Structure
 
 ```
 /
-├── frontend/                # React.js application
+├── frontend/                # React.js application (Netlify)
 │   ├── src/
 │   │   ├── components/      # Reusable UI components
 │   │   ├── contexts/        # React contexts (Auth)
@@ -17,7 +22,7 @@ A modern expense splitting application built with React frontend and Python Flas
 │   ├── package.json
 │   └── vite.config.js
 │
-├── backend/                 # Flask application
+├── backend/                 # Flask application (Render)
 │   ├── app/
 │   │   ├── routes/          # API route handlers
 │   │   ├── models/          # Database models
@@ -86,10 +91,10 @@ A modern expense splitting application built with React frontend and Python Flas
    npm install
    ```
 
-3. **Configure environment (optional):**
+3. **Configure environment:**
    ```bash
    cp .env.example .env
-   # Edit .env if needed (default API URL is http://localhost:5000)
+   # Edit .env with your backend URL
    ```
 
 4. **Start development server:**
@@ -102,28 +107,24 @@ A modern expense splitting application built with React frontend and Python Flas
 
 ### Backend (.env)
 ```env
-# MongoDB Connection
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/spliteasy?retryWrites=true&w=majority
+# MongoDB Connection (Required)
+MONGO_URI=mongodb+srv://<DB_USER>:<DB_PASSWORD>@easyxpense.uafnhae.mongodb.net/easyxpense
 
-# JWT Secret (Generate a secure random string for production)
-JWT_SECRET=your-super-secure-jwt-secret-key-change-this-in-production
+# JWT Secret (Required)
+JWT_SECRET=your-super-secure-jwt-secret-key
 
-# Frontend URL for CORS
-CLIENT_URL=http://localhost:5173
-
-# Server Configuration
+# Flask Configuration
+FLASK_ENV=production
 PORT=5000
-FLASK_ENV=development
-FLASK_DEBUG=True
 ```
 
 ### Frontend (.env)
 ```env
-# API Base URL (Backend URL)
-VITE_API_URL=http://localhost:5000
+# API Base URL (Required)
+VITE_API_BASE_URL=https://your-render-backend-url.onrender.com
 
 # App Configuration
-VITE_APP_NAME=SplitEasy
+VITE_APP_NAME=EasyXpense
 VITE_APP_VERSION=1.0.0
 ```
 
@@ -138,47 +139,21 @@ VITE_APP_VERSION=1.0.0
 - **📱 Responsive Design**: Mobile-friendly interface
 - **🛡️ Input Validation**: Comprehensive validation on both frontend and backend
 
-## 🔒 Security Features
-
-- JWT token-based authentication
-- Password hashing with bcrypt
-- Input validation and sanitization
-- CORS configuration for secure cross-origin requests
-- Environment variable protection
-- SQL injection prevention with MongoDB
-
-## 📱 How to Use
-
-1. **Register/Login**: Create a new account or login with existing credentials
-2. **Add Friends**: Add friends by their email addresses
-3. **Create Expenses**: Add shared expenses with selected participants
-4. **Track Debts**: View who owes what in the debt tracker
-5. **Settle Up**: Record payments to settle debts between friends
-
 ## 🚀 Production Deployment
 
-### Backend Deployment
-```bash
-# Install production dependencies
-pip install -r requirements.txt
+### Backend (Render)
+1. Connect your GitHub repository to Render
+2. Set environment variables:
+   - `MONGO_URI`
+   - `JWT_SECRET`
+   - `FLASK_ENV=production`
+3. Deploy with: `gunicorn run:app`
 
-# Set production environment variables
-export FLASK_ENV=production
-export FLASK_DEBUG=False
-
-# Run with Gunicorn
-gunicorn wsgi:app --bind 0.0.0.0:5000
-```
-
-### Frontend Deployment
-```bash
-# Build for production
-npm run build
-
-# Serve the dist folder with any static file server
-# Example with serve:
-npx serve -s dist -l 3000
-```
+### Frontend (Netlify)
+1. Connect your GitHub repository to Netlify
+2. Set build command: `npm run build`
+3. Set publish directory: `dist`
+4. Set environment variable: `VITE_API_BASE_URL`
 
 ## 📊 API Endpoints
 
@@ -205,14 +180,6 @@ npx serve -s dist -l 3000
 ### System
 - `GET /api/health` - Health check endpoint
 
-## 💰 Currency Handling
-
-- All amounts stored as precise decimal values in the database
-- INR currency symbol (₹) displayed throughout the UI
-- Proper rounding to paise (0.01 INR) precision
-- Indian number formatting support
-- Input validation for reasonable amount limits
-
 ## 🛠️ Tech Stack
 
 ### Frontend
@@ -220,65 +187,56 @@ npx serve -s dist -l 3000
 - **React Router** - Client-side routing
 - **Axios** - HTTP client for API calls
 - **Vite** - Fast build tool and dev server
+- **Netlify** - Hosting platform
 
 ### Backend
 - **Python Flask** - Lightweight web framework
 - **PyMongo** - MongoDB driver for Python
 - **JWT** - JSON Web Token authentication
 - **bcrypt** - Password hashing
-- **Flask-CORS** - Cross-origin resource sharing
+- **Gunicorn** - WSGI HTTP Server
+- **Render** - Hosting platform
 
 ### Database
 - **MongoDB Atlas** - Cloud-hosted MongoDB
 
-## 🧪 Development
+## 🔒 Security Features
 
-### Running Tests
-```bash
-# Backend tests (if implemented)
-cd backend
-python -m pytest
+- JWT token-based authentication
+- Password hashing with bcrypt
+- Input validation and sanitization
+- CORS configuration for secure cross-origin requests
+- Environment variable protection
+- Graceful error handling
 
-# Frontend tests (if implemented)
-cd frontend
-npm test
-```
+## 📱 How to Use
 
-### Code Quality
-- Follow PEP 8 for Python code
-- Use ESLint and Prettier for JavaScript/React code
-- Implement proper error handling
-- Add comprehensive logging
+1. **Register/Login**: Create a new account or login with existing credentials
+2. **Add Friends**: Add friends by their email addresses
+3. **Create Expenses**: Add shared expenses with selected participants
+4. **Track Debts**: View who owes what in the debt tracker
+5. **Settle Up**: Record payments to settle debts between friends
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
 1. **MongoDB Connection Error**
-   - Verify MongoDB URI in `.env` file
-   - Check network connectivity
-   - Ensure MongoDB Atlas IP whitelist includes your IP
+   - Verify `MONGO_URI` in environment variables
+   - Check MongoDB Atlas IP whitelist
+   - Ensure database name is correct
 
 2. **CORS Errors**
-   - Verify `CLIENT_URL` in backend `.env` matches frontend URL
-   - Check if both servers are running
+   - Verify frontend URL is whitelisted in backend
+   - Check if both services are running
 
 3. **Authentication Issues**
-   - Verify JWT secret is set in backend `.env`
+   - Verify `JWT_SECRET` is set
    - Check if token is being sent in request headers
 
-4. **Port Conflicts**
-   - Backend default: 5000
-   - Frontend default: 5173
-   - Change ports in respective configuration files if needed
-
-## 📞 Support
-
-For issues or questions:
-1. Check the troubleshooting section above
-2. Verify all environment variables are properly configured
-3. Check application logs for detailed error messages
-4. Ensure all dependencies are installed correctly
+4. **Deployment Issues**
+   - Ensure all environment variables are set in hosting platforms
+   - Check build logs for errors
 
 ## 📄 License
 

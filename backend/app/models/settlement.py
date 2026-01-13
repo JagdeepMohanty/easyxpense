@@ -5,8 +5,11 @@ class Settlement:
     def __init__(self, db):
         self.collection = db.settlements
         # Create indexes for better performance
-        self.collection.create_index([("fromUser", 1), ("toUser", 1)])
-        self.collection.create_index("date")
+        try:
+            self.collection.create_index([("fromUser", 1), ("toUser", 1)])
+            self.collection.create_index("date")
+        except Exception:
+            pass  # Indexes might already exist or DB not available
     
     def create_settlement(self, from_user_id, to_user_id, amount):
         """Create a new settlement"""

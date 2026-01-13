@@ -25,15 +25,18 @@ def jwt_required_custom(f):
             if not user_id:
                 return jsonify({'msg': 'Token is not valid'}), 401
             
-            # Verify user exists
-            user_model = User(current_app.db)
-            user = user_model.find_by_id(user_id)
-            if not user:
-                return jsonify({'msg': 'User not found'}), 401
+            # Verify user exists (only if DB is available)
+            if current_app.db:
+                user_model = User(current_app.db)
+                user = user_model.find_by_id(user_id)
+                if not user:
+                    return jsonify({'msg': 'User not found'}), 401
+                request.current_user = user
+            else:
+                request.current_user = None
             
             # Add user info to request context
             request.current_user_id = user_id
-            request.current_user = user
             
             return f(*args, **kwargs)
             

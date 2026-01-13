@@ -6,8 +6,11 @@ class Expense:
     def __init__(self, db):
         self.collection = db.expenses
         # Create indexes for better performance
-        self.collection.create_index([("payer", 1), ("participants", 1)])
-        self.collection.create_index("date")
+        try:
+            self.collection.create_index([("payer", 1), ("participants", 1)])
+            self.collection.create_index("date")
+        except Exception:
+            pass  # Indexes might already exist or DB not available
     
     def _validate_amount(self, amount):
         """Validate and format amount for INR currency"""

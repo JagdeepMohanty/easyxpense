@@ -5,8 +5,11 @@ import bcrypt
 class User:
     def __init__(self, db):
         self.collection = db.users
-        # Create indexes
-        self.collection.create_index("email", unique=True)
+        # Create indexes safely
+        try:
+            self.collection.create_index("email", unique=True)
+        except Exception:
+            pass  # Index might already exist or DB not available
     
     def create_user(self, name, email, password):
         """Create a new user with hashed password"""

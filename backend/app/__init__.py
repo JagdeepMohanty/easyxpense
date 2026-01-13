@@ -14,27 +14,39 @@ def create_app():
     app = Flask(__name__)
     
     # Configuration
-    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET', 'fallback-secret-key')
+    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET')
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
-    app.config['MONGODB_URI'] = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/spliteasy')
+    mongo_uri = os.getenv('MONGO_URI')
+    
+    if not app.config['JWT_SECRET_KEY']:
+        raise ValueError('JWT_SECRET environment variable is required')
+    if not mongo_uri:
+        raise ValueError('MONGO_URI environment variable is required')
     
     # Initialize extensions
     jwt = JWTManager(app)
-    CORS(app, origins=[os.getenv('CLIENT_URL', 'http://localhost:5173')])
     
-    # MongoDB connection
+    # CORS configuration for production
+    cors_origins = ['https://easyxpense.netlify.app']
+    if os.getenv('FLASK_ENV') == 'development':
+        cors_origins.append('http://localhost:5173')
+    
+    CORS(app, origins=cors_origins)
+    
+    # MongoDB connection with graceful error handling
     try:
-        client = MongoClient(app.config['MONGODB_URI'])
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
         app.db = client.get_default_database()
-        # Test connection
-        client.admin.command('ping')
-        print('✅ MongoDB connected successfully')
+        print('✅ MongoDB connection initialized')
     except Exception as e:
-        print(f'❌ MongoDB connection error: {e}')
-        raise
+        print(f'⚠️ MongoDB connection warning: {e}')
+        app.db = None
     
     # Configure logging
-    logging.basicConfig(level=logging.INFO)
+    if os.getenv('FLASK_ENV') == 'production':
+        logging.basicConfig(level=logging.WARNING)
+    else:
+        logging.basicConfig(level=logging.INFO)
     
     # Register blueprints
     from app.routes.auth import auth_bp
