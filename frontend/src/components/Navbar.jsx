@@ -1,45 +1,54 @@
-
-import React, { useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../contexts/AuthContext';
-import './Navbar.css';
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
-  const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const isActive = (path) => location.pathname === path;
 
   return (
     <nav className="navbar">
-      <div className="navbar-container">
-        <div className="navbar-left">
-          <Link to="/" className="navbar-brand">
-            <span className="brand-icon">💰</span>
-            SplitEase
+      <div className="nav-container">
+        <Link to="/" className="nav-logo">
+          💰 EasyXpense
+        </Link>
+        <div className="nav-menu">
+          <Link 
+            to="/" 
+            className={`nav-link ${isActive('/') ? 'active' : ''}`}
+          >
+            Home
           </Link>
-        </div>
-        <div className="navbar-right">
-          {user ? (
-            <div className="user-nav">
-              <Link to="/" className="nav-link">Dashboard</Link>
-              <Link to="/friends" className="nav-link">Friends</Link>
-              <Link to="/create-expense" className="nav-link">Add Expense</Link>
-              <Link to="/settle" className="nav-link">Settle</Link>
-              <Link to="/debts" className="nav-link">Debts</Link>
-              <button onClick={handleLogout} className="logout-btn">
-                Logout
-              </button>
-            </div>
-          ) : (
-            <div className="auth-nav">
-              <Link to="/login" className="auth-btn login-btn">Login</Link>
-              <Link to="/register" className="auth-btn register-btn">Register</Link>
-            </div>
-          )}
+          <Link 
+            to="/dashboard" 
+            className={`nav-link ${isActive('/dashboard') ? 'active' : ''}`}
+          >
+            Dashboard
+          </Link>
+          <Link 
+            to="/add-expense" 
+            className={`nav-link ${isActive('/add-expense') ? 'active' : ''}`}
+          >
+            Add Expense
+          </Link>
+          <Link 
+            to="/friends" 
+            className={`nav-link ${isActive('/friends') ? 'active' : ''}`}
+          >
+            Friends
+          </Link>
+          <Link 
+            to="/debts" 
+            className={`nav-link ${isActive('/debts') ? 'active' : ''}`}
+          >
+            Debts
+          </Link>
+          <Link 
+            to="/history" 
+            className={`nav-link ${isActive('/history') ? 'active' : ''}`}
+          >
+            History
+          </Link>
         </div>
       </div>
     </nav>

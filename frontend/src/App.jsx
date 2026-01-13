@@ -1,104 +1,34 @@
-import React, { useContext, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { AuthProvider, AuthContext } from './contexts/AuthContext';
-import ErrorBoundary from './components/ErrorBoundary';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import Footer from './components/Footer';
+import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
+import AddExpense from './pages/AddExpense';
 import Friends from './pages/Friends';
-import CreateExpense from './pages/CreateExpense';
-import Settle from './pages/Settle';
 import DebtTracker from './pages/DebtTracker';
-import './App.css';
+import PaymentHistory from './pages/PaymentHistory';
+import './styles/App.css';
 
-// Loading component
-const LoadingSpinner = () => (
-  <div className="loading-container">
-    <div className="loading-spinner"></div>
-    <p>Loading EasyXpense...</p>
-  </div>
-);
-
-// Protected Route Component
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useContext(AuthContext);
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
-};
-
-// Public Route Component
-const PublicRoute = ({ children }) => {
-  const { isAuthenticated } = useContext(AuthContext);
-  return !isAuthenticated ? children : <Navigate to="/" replace />;
-};
-
-// Auth logout listener component
-const AuthLogoutListener = () => {
-  const { logout } = useContext(AuthContext);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const handleAuthLogout = () => {
-      logout();
-      navigate('/login', { replace: true });
-    };
-
-    window.addEventListener('auth-logout', handleAuthLogout);
-    return () => window.removeEventListener('auth-logout', handleAuthLogout);
-  }, [logout, navigate]);
-
-  return null;
-};
-
-const AppRoutes = () => {
-  const { isAuthenticated, loading } = useContext(AuthContext);
-  
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-  
+function App() {
   return (
-    <div className="app-container">
-      <AuthLogoutListener />
-      {isAuthenticated && <Navbar />}
-      <Routes>
-        <Route path="/login" element={
-          <PublicRoute><Login /></PublicRoute>
-        } />
-        <Route path="/register" element={
-          <PublicRoute><Register /></PublicRoute>
-        } />
-        <Route path="/" element={
-          <ProtectedRoute><Dashboard /></ProtectedRoute>
-        } />
-        <Route path="/friends" element={
-          <ProtectedRoute><Friends /></ProtectedRoute>
-        } />
-        <Route path="/create-expense" element={
-          <ProtectedRoute><CreateExpense /></ProtectedRoute>
-        } />
-        <Route path="/settle" element={
-          <ProtectedRoute><Settle /></ProtectedRoute>
-        } />
-        <Route path="/debts" element={
-          <ProtectedRoute><DebtTracker /></ProtectedRoute>
-        } />
-        <Route path="*" element={
-          isAuthenticated ? <Navigate to="/" replace /> : <Navigate to="/login" replace />
-        } />
-      </Routes>
-    </div>
+    <Router>
+      <div className="App">
+        <Navbar />
+        <main className="main-content">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/add-expense" element={<AddExpense />} />
+            <Route path="/friends" element={<Friends />} />
+            <Route path="/debts" element={<DebtTracker />} />
+            <Route path="/history" element={<PaymentHistory />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
+    </Router>
   );
-};
-
-const App = () => (
-  <ErrorBoundary>
-    <AuthProvider>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </AuthProvider>
-  </ErrorBoundary>
-);
+}
 
 export default App;

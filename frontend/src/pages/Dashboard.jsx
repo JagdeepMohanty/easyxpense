@@ -1,92 +1,132 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { debtsAPI, expensesAPI } from '../services/api';
-import { AuthContext } from '../contexts/AuthContext';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { expensesAPI, debtsAPI } from '../services/api';
 import { formatCurrency } from '../utils/currency';
-import './Dashboard.css';
 
 const Dashboard = () => {
-  const { user } = useContext(AuthContext);
-  const navigate = useNavigate();
-  const [debts, setDebts] = useState([]);
   const [expenses, setExpenses] = useState([]);
+  const [debts, setDebts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!user) {
-        navigate('/login');
-        return;
-      }
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [expensesRes, debtsRes] = await Promise.all([
+        expensesAPI.getAll(),
+        debtsAPI.getAll()
+      ]);
       
-      try {
-        const [debtsRes, expensesRes] = await Promise.all([
-          debtsAPI.getDebts(),
-          expensesAPI.getExpenses()
-        ]);
-        setDebts(debtsRes.data);
-        setExpenses(expensesRes.data.slice(0, 5));
-      } catch (err) {
-        console.error('Failed to fetch dashboard data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      setExpenses(expensesRes.data.slice(0, 5)); // Show only recent 5
+      setDebts(debtsRes.data);
+    } catch (err) {
+      setError('Failed to load dashboard data');
+      console.error('Dashboard error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchData();
-  }, [user, navigate]);
-
-  if (!user) return null;
-  
   if (loading) {
     return (
       <div className="dashboard">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Loading dashboard...</p>
-        </div>
+        <div className="loading">Loading dashboard...</div>
       </div>
     );
   }
 
+  if (error) {
+    return (
+      <div className="dashboard">
+        <div className="error">{error}</div>
+      </div>
+    );
+  }
+
+  const totalOwed = debts
+    .filter(debt => debt.amount > 0)
+    .reduce((sum, debt) => sum + debt.amount, 0);
+
+  const totalOwe = debts
+    .filter(debt => debt.amount < 0)
+    .reduce((sum, debt) => sum + Math.abs(debt.amount), 0);
+
   return (
     <div className="dashboard">
-      <h1>Welcome, {user.name}!</h1>
-      <div className="dashboard-grid">
-        <div className="debts-section">
-          <h2>Your Debts</h2>
-          {debts.length === 0 ? (
-            <p>No debts to display.</p>
-          ) : (
-            debts.map((debt) => (
-              <div key={debt.friendId} className="debt-card">
-                <span className={debt.amount > 0 ? 'owe-you' : 'you-owe'}>
-                  {debt.friendName}: {debt.amount > 0 ? 'Owes you' : 'You owe'} {formatCurrency(Math.abs(debt.amount))}
-                </span>
-              </div>
-            ))
-          )}
+      <div className="dashboard-header">
+        <h1>Dashboard</h1>
+        <Link to="/add-expense" className="btn btn-primary">
+          Add New Expense
+        </Link>
+      </div>
+
+      <div className="dashboard-stats">
+        <div className="stat-card positive">
+          <h3>You are owed</h3>
+          <p className="amount">{formatCurrency(totalOwed)}</p>
         </div>
-        <div className="expenses-section">
-          <h2>Recent Expenses</h2>
-          {expenses.length === 0 ? (
-            <p>No recent expenses.</p>
-          ) : (
-            expenses.map((exp) => (
-              <div key={exp._id} className="expense-card">
-                <span>{exp.description}</span>
-                <span>{formatCurrency(exp.amount)}</span>
-                <span className="payer">Paid by: {exp.payer}</span>
-              </div>
-            ))
-          )}
+        <div className="stat-card negative">
+          <h3>You owe</h3>
+          <p className="amount">{formatCurrency(totalOwe)}</p>
+        </div>
+        <div className="stat-card neutral">
+          <h3>Total expenses</h3>
+          <p className="amount">{expenses.length}</p>
         </div>
       </div>
-      <div className="actions">
-        <button onClick={() => navigate('/create-expense')}>
-          Add Expense
-        </button>
-        <button onClick={() => navigate('/settle')}>Settle Debt</button>
+
+      <div className="dashboard-content">
+        <div className="recent-expenses">
+          <div className="section-header">
+            <h2>Recent Expenses</h2>
+            <Link to="/history" className="view-all">View All</Link>
+          </div>
+          {expenses.length === 0 ? (
+            <p className="empty-state">No expenses yet. <Link to="/add-expense">Add your first expense</Link></p>
+          ) : (
+            <div className="expense-list">
+              {expenses.map((expense) => (
+                <div key={expense._id} className="expense-item">
+                  <div className="expense-info">
+                    <h4>{expense.description}</h4>
+                    <p>Paid by: {expense.payer}</p>
+                  </div>
+                  <div className="expense-amount">
+                    {formatCurrency(expense.amount)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="debt-summary">
+          <div className="section-header">
+            <h2>Debt Summary</h2>
+            <Link to="/debts" className="view-all">View All</Link>
+          </div>
+          {debts.length === 0 ? (
+            <p className="empty-state">No debts to show</p>
+          ) : (
+            <div className="debt-list">
+              {debts.slice(0, 5).map((debt) => (
+                <div key={debt.friendId} className="debt-item">
+                  <div className="debt-info">
+                    <h4>{debt.friendName}</h4>
+                  </div>
+                  <div className={`debt-amount ${debt.amount > 0 ? 'positive' : 'negative'}`}>
+                    {debt.amount > 0 ? 'owes you ' : 'you owe '}
+                    {formatCurrency(Math.abs(debt.amount))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
