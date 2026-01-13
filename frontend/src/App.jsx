@@ -75,7 +75,7 @@ const AppRoutes = () => {
           <ProtectedRoute><Friends /></ProtectedRoute>
         } />
         <Route path="/create-expense" element={
-          <ProtectedRoute><CreateExpense /></CreateExpense>
+          <ProtectedRoute><CreateExpense /></ProtectedRoute>
         } />
         <Route path="/settle" element={
           <ProtectedRoute><Settle /></ProtectedRoute>

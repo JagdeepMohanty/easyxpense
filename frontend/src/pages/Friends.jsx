@@ -1,37 +1,55 @@
-
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { friendsAPI } from '../services/api';
 import { AuthContext } from '../contexts/AuthContext';
 import './Friends.css';
 
 const Friends = () => {
-  const { user, token } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [friends, setFriends] = useState([]);
   const [friendEmail, setFriendEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-    } else {
-      axios
-        .get('/api/friends', { headers: { 'x-auth-token': token } })
-        .then((res) => setFriends(res.data))
-        .catch((err) => console.error(err));
-    }
-  }, [user, token, navigate]);
+    const fetchFriends = async () => {
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+      
+      try {
+        const response = await friendsAPI.getFriends();
+        setFriends(response.data);
+      } catch (err) {
+        console.error('Failed to fetch friends:', err);
+      }
+    };
 
-  const handleAddFriend = () => {
-    axios
-      .post('/api/friends/add', { friendEmail }, { headers: { 'x-auth-token': token } })
-      .then(() => {
-        setFriendEmail('');
-        axios
-          .get('/api/friends', { headers: { 'x-auth-token': token } })
-          .then((res) => setFriends(res.data));
-      })
-      .catch((err) => alert(err.response?.data.msg || 'Failed to add friend'));
+    fetchFriends();
+  }, [user, navigate]);
+
+  const handleAddFriend = async (e) => {
+    e.preventDefault();
+    setError('');
+    
+    if (!friendEmail.trim()) {
+      setError('Please enter a valid email');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      await friendsAPI.addFriend(friendEmail.trim());
+      setFriendEmail('');
+      const response = await friendsAPI.getFriends();
+      setFriends(response.data);
+    } catch (err) {
+      setError(err.response?.data?.msg || 'Failed to add friend');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!user) return null;
@@ -39,15 +57,19 @@ const Friends = () => {
   return (
     <div className="friends-container">
       <h2>Your Friends</h2>
-      <div className="add-friend">
+      {error && <div className="error-message">{error}</div>}
+      <form className="add-friend" onSubmit={handleAddFriend}>
         <input
           type="email"
           placeholder="Friend's Email"
           value={friendEmail}
           onChange={(e) => setFriendEmail(e.target.value)}
+          required
         />
-        <button onClick={handleAddFriend}>Add Friend</button>
-      </div>
+        <button type="submit" disabled={loading}>
+          {loading ? 'Adding...' : 'Add Friend'}
+        </button>
+      </form>
       <div className="friends-list">
         {friends.length === 0 ? (
           <p>No friends added yet.</p>

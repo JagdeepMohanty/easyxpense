@@ -1,32 +1,53 @@
-
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { debtsAPI, expensesAPI } from '../services/api';
 import { AuthContext } from '../contexts/AuthContext';
+import { formatCurrency } from '../utils/currency';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const { user, token } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [debts, setDebts] = useState([]);
   const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-    } else {
-      axios
-        .get('/api/debts', { headers: { 'x-auth-token': token } })
-        .then((res) => setDebts(res.data))
-        .catch((err) => console.error(err));
-      axios
-        .get('/api/expenses', { headers: { 'x-auth-token': token } })
-        .then((res) => setExpenses(res.data.slice(0, 5)))
-        .catch((err) => console.error(err));
-    }
-  }, [user, token, navigate]);
+    const fetchData = async () => {
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+      
+      try {
+        const [debtsRes, expensesRes] = await Promise.all([
+          debtsAPI.getDebts(),
+          expensesAPI.getExpenses()
+        ]);
+        setDebts(debtsRes.data);
+        setExpenses(expensesRes.data.slice(0, 5));
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user, navigate]);
 
   if (!user) return null;
+  
+  if (loading) {
+    return (
+      <div className="dashboard">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard">
@@ -40,8 +61,7 @@ const Dashboard = () => {
             debts.map((debt) => (
               <div key={debt.friendId} className="debt-card">
                 <span className={debt.amount > 0 ? 'owe-you' : 'you-owe'}>
-                  {debt.friendName}: {debt.amount > 0 ? 'Owes you' : 'You owe'} ₹
-                  {Math.abs(debt.amount).toFixed(2)}
+                  {debt.friendName}: {debt.amount > 0 ? 'Owes you' : 'You owe'} {formatCurrency(Math.abs(debt.amount))}
                 </span>
               </div>
             ))
@@ -55,8 +75,8 @@ const Dashboard = () => {
             expenses.map((exp) => (
               <div key={exp._id} className="expense-card">
                 <span>{exp.description}</span>
-                <span>₹{exp.amount.toFixed(2)}</span>
-                <span className="payer">Paid by: {exp.payer.name}</span>
+                <span>{formatCurrency(exp.amount)}</span>
+                <span className="payer">Paid by: {exp.payer}</span>
               </div>
             ))
           )}

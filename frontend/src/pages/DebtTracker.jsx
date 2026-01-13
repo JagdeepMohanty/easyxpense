@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import { debtsAPI } from '../services/api';
 import { AuthContext } from '../contexts/AuthContext';
+import { formatCurrency } from '../utils/currency';
 import './DebtTracker.css';
 
 const DebtTracker = () => {
@@ -13,7 +14,7 @@ const DebtTracker = () => {
     const fetchDebts = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('/api/debts');
+        const response = await debtsAPI.getDebts();
         setDebts(response.data);
       } catch (err) {
         setError('Failed to load debt information');
@@ -25,16 +26,24 @@ const DebtTracker = () => {
     fetchDebts();
   }, []);
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 2
-    }).format(Math.abs(amount));
-  };
-
-  if (loading) return <div className="loading">Loading debt information...</div>;
-  if (error) return <div className="error-message">{error}</div>;
+  if (loading) {
+    return (
+      <div className="debt-tracker">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading debt information...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="debt-tracker">
+        <div className="error-message">{error}</div>
+      </div>
+    );
+  }
 
   const activeDebts = debts.filter(debt => Math.abs(debt.amount) > 0.01);
 
@@ -71,7 +80,7 @@ const DebtTracker = () => {
                       </span>
                     ) : (
                       <span className="negative">
-                        you owe {formatCurrency(debt.amount)}
+                        you owe {formatCurrency(Math.abs(debt.amount))}
                       </span>
                     )}
                   </span>
