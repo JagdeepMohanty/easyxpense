@@ -48,11 +48,18 @@ class Expense:
     
     def create_expense(self, description, amount, payer, participants):
         """Create a new expense with comprehensive validation"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f'Creating expense: {description}, amount: {amount}, payer: {payer}, participants: {participants}')
+        
         # Validate amount
         validated_amount = self._validate_amount(amount)
+        logger.info(f'Validated amount: {validated_amount}')
         
         # Validate participants
         validated_participants = self._validate_participants(participants, payer)
+        logger.info(f'Validated participants: {validated_participants}')
         
         expense_data = {
             'description': description.strip(),
@@ -63,8 +70,15 @@ class Expense:
             'currency': 'INR'
         }
         
-        result = self.collection.insert_one(expense_data)
-        return result.inserted_id
+        logger.info(f'Inserting expense data: {expense_data}')
+        
+        try:
+            result = self.collection.insert_one(expense_data)
+            logger.info(f'MongoDB insert result: {result.inserted_id}')
+            return result.inserted_id
+        except Exception as e:
+            logger.error(f'MongoDB insert failed: {e}')
+            raise
     
     def get_all_expenses(self):
         """Get all expenses sorted by date (newest first)"""

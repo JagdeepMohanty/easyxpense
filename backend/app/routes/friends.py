@@ -26,9 +26,11 @@ def add_friend():
     
     try:
         if not current_app.db:
-            return jsonify({'error': 'Database not available'}), 503
+            current_app.logger.error('Database connection not available for friends')
+            return jsonify({'success': False, 'error': 'Database not available'}), 503
             
         friends_collection = current_app.db.friends
+        current_app.logger.info('Checking for existing friend')
         
         # Check if friend already exists
         existing_friend = friends_collection.find_one({'email': email})
@@ -42,7 +44,9 @@ def add_friend():
             'created_at': ObjectId().generation_time
         }
         
+        current_app.logger.info(f'Inserting friend data: {friend_data}')
         result = friends_collection.insert_one(friend_data)
+        current_app.logger.info(f'Friend inserted with ID: {result.inserted_id}')
         
         return jsonify({
             'success': True,

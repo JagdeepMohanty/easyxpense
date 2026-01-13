@@ -33,10 +33,13 @@ def create_expense():
     
     try:
         if not current_app.db:
-            return jsonify({'error': 'Database not available'}), 503
+            current_app.logger.error('Database connection not available')
+            return jsonify({'success': False, 'error': 'Database not available'}), 503
             
+        current_app.logger.info('Creating expense model instance')
         expense_model = Expense(current_app.db)
         
+        current_app.logger.info('Calling expense_model.create_expense')
         expense_id = expense_model.create_expense(
             description=description,
             amount=amount,
@@ -44,15 +47,17 @@ def create_expense():
             participants=participants
         )
         
+        current_app.logger.info(f'Expense created successfully with ID: {expense_id}')
+        
         return jsonify({
             'success': True,
             'message': 'Expense created successfully',
             'data': {
                 '_id': str(expense_id),
                 'description': description,
-                'amount': validated_amount,
+                'amount': amount,
                 'payer': payer,
-                'participants': validated_participants
+                'participants': participants
             }
         }), 201
         

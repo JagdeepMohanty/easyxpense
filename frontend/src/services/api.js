@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://easyxpense-backend.onrender.com';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://easyxpense.onrender.com';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -9,6 +9,43 @@ const api = axios.create({
   },
   timeout: 10000, // 10 second timeout
 });
+
+// Add request interceptor for logging
+api.interceptors.request.use(
+  (config) => {
+    console.log('API Request:', {
+      method: config.method?.toUpperCase(),
+      url: `${config.baseURL}${config.url}`,
+      data: config.data
+    });
+    return config;
+  },
+  (error) => {
+    console.error('API Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for logging
+api.interceptors.response.use(
+  (response) => {
+    console.log('API Response:', {
+      status: response.status,
+      url: response.config.url,
+      data: response.data
+    });
+    return response;
+  },
+  (error) => {
+    console.error('API Response Error:', {
+      status: error.response?.status,
+      url: error.config?.url,
+      message: error.message,
+      data: error.response?.data
+    });
+    return Promise.reject(error);
+  }
+);
 
 // Expenses API
 export const expensesAPI = {
