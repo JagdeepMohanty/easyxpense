@@ -4,19 +4,33 @@ import { authAPI } from '../services/api';
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
+
+  // Safe localStorage access
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('token');
+      setToken(storedToken);
+    }
+    setInitialized(true);
+  }, []);
 
   useEffect(() => {
     const initializeAuth = async () => {
+      if (!initialized) return;
+      
       if (token && !user) {
         try {
           const response = await authAPI.getCurrentUser();
           setUser(response.data);
         } catch (error) {
           console.error('Failed to fetch user:', error);
-          localStorage.removeItem('token');
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('token');
+          }
           setToken(null);
           setUser(null);
         }
@@ -25,15 +39,19 @@ export const AuthProvider = ({ children }) => {
     };
 
     initializeAuth();
-  }, [token, user]);
+  }, [token, initialized]); // Remove 'user' from dependencies
 
   const login = (newToken) => {
-    localStorage.setItem('token', newToken);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('token', newToken);
+    }
     setToken(newToken);
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+    }
     setToken(null);
     setUser(null);
   };

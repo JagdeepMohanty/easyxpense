@@ -1,6 +1,7 @@
-import React, { useContext } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useContext, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './contexts/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -15,7 +16,7 @@ import './App.css';
 const LoadingSpinner = () => (
   <div className="loading-container">
     <div className="loading-spinner"></div>
-    <p>Loading SplitEasy...</p>
+    <p>Loading EasyXpense...</p>
   </div>
 );
 
@@ -25,10 +26,28 @@ const ProtectedRoute = ({ children }) => {
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
-// Public Route Component (redirect to dashboard if authenticated)
+// Public Route Component
 const PublicRoute = ({ children }) => {
   const { isAuthenticated } = useContext(AuthContext);
   return !isAuthenticated ? children : <Navigate to="/" replace />;
+};
+
+// Auth logout listener component
+const AuthLogoutListener = () => {
+  const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleAuthLogout = () => {
+      logout();
+      navigate('/login', { replace: true });
+    };
+
+    window.addEventListener('auth-logout', handleAuthLogout);
+    return () => window.removeEventListener('auth-logout', handleAuthLogout);
+  }, [logout, navigate]);
+
+  return null;
 };
 
 const AppRoutes = () => {
@@ -40,6 +59,7 @@ const AppRoutes = () => {
   
   return (
     <div className="app-container">
+      <AuthLogoutListener />
       {isAuthenticated && <Navbar />}
       <Routes>
         <Route path="/login" element={
@@ -55,7 +75,7 @@ const AppRoutes = () => {
           <ProtectedRoute><Friends /></ProtectedRoute>
         } />
         <Route path="/create-expense" element={
-          <ProtectedRoute><CreateExpense /></ProtectedRoute>
+          <ProtectedRoute><CreateExpense /></CreateExpense>
         } />
         <Route path="/settle" element={
           <ProtectedRoute><Settle /></ProtectedRoute>
@@ -72,11 +92,13 @@ const AppRoutes = () => {
 };
 
 const App = () => (
-  <AuthProvider>
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
-  </AuthProvider>
+  <ErrorBoundary>
+    <AuthProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </AuthProvider>
+  </ErrorBoundary>
 );
 
 export default App;
