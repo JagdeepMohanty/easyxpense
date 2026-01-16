@@ -118,33 +118,6 @@ def create_app():
                 'database': 'unknown'
             }), 200
     
-    # Test endpoint for debugging
-    @app.route('/api/test', methods=['GET', 'POST'])
-    def test_endpoint():
-        """Test endpoint to verify API connectivity"""
-        try:
-            if request.method == 'POST':
-                data = request.get_json()
-                app.logger.info(f'Test POST received: {data}')
-                return jsonify({
-                    'success': True,
-                    'message': 'POST request successful',
-                    'received': data
-                }), 200
-            db_status = 'connected' if app.db is not None else 'disconnected'
-            return jsonify({
-                'success': True,
-                'message': 'API is working',
-                'database': db_status
-            }), 200
-        except Exception as e:
-            app.logger.error(f'Test endpoint error: {e}')
-            return jsonify({
-                'success': False,
-                'message': 'Test endpoint error',
-                'error': str(e)
-            }), 200
-    
     # Health endpoint for monitoring
     @app.route('/health', methods=['GET', 'HEAD'])
     def health():
