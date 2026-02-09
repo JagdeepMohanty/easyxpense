@@ -13,9 +13,10 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // FIX: Fetch data on mount and when navigating back to this page
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, []); // Empty deps is correct - fetchDashboardData is stable
 
   const fetchDashboardData = async () => {
     try {
@@ -27,9 +28,11 @@ const Dashboard = () => {
         debtsAPI.getAll()
       ]);
       
-      setExpenses(expensesRes.data.slice(0, 5)); // Show only recent 5
+      // FIX: Handle API response - data might be nested or direct array
+      const expensesData = Array.isArray(expensesRes.data) ? expensesRes.data : [];
+      setExpenses(expensesData.slice(0, 5)); // Show only recent 5
       
-      // Handle both optimized and legacy debt response formats
+      // FIX: Handle both optimized and legacy debt response formats
       const debtsData = debtsRes.data.debts || debtsRes.data;
       const balancesData = debtsRes.data.balances || {};
       

@@ -14,9 +14,10 @@ const DebtTracker = () => {
   const [settlementAmount, setSettlementAmount] = useState('');
   const [settlingLoading, setSettlingLoading] = useState(false);
 
+  // FIX: Fetch debts on mount and when navigating back to this page
   useEffect(() => {
     fetchDebts();
-  }, []);
+  }, []); // Empty deps is correct - fetchDebts is stable
 
   const fetchDebts = async () => {
     try {
@@ -25,12 +26,16 @@ const DebtTracker = () => {
       
       const response = await debtsAPI.getAll();
       
-      // Handle optimized response format
+      // FIX: Handle optimized response format correctly
       if (response.data.debts) {
-        setDebts(response.data.debts);
+        // Optimized format: {debts: [], balances: {}}
+        setDebts(Array.isArray(response.data.debts) ? response.data.debts : []);
+      } else if (Array.isArray(response.data)) {
+        // Legacy format: direct array
+        setDebts(response.data);
       } else {
-        // Legacy format
-        setDebts(Array.isArray(response.data) ? response.data : []);
+        // Fallback: empty array
+        setDebts([]);
       }
     } catch (err) {
       setError(err.message || 'Failed to load debts');
@@ -57,7 +62,8 @@ const DebtTracker = () => {
 
       setSettlingDebt(null);
       setSettlementAmount('');
-      fetchDebts();
+      // FIX: Refresh debts list after settlement to show updated data
+      await fetchDebts();
     } catch (err) {
       alert(err.message || 'Failed to settle debt');
       console.error('Settlement error:', err);

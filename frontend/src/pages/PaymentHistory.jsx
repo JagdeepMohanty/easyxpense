@@ -9,9 +9,10 @@ const PaymentHistory = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // FIX: Fetch history on mount and when navigating back to this page
   useEffect(() => {
     fetchHistory();
-  }, []);
+  }, []); // Empty deps is correct - fetchHistory is stable
 
   const fetchHistory = async () => {
     try {
@@ -23,11 +24,15 @@ const PaymentHistory = () => {
         settlementsAPI.getHistory()
       ]);
       
+      // FIX: Ensure we always set arrays, even if API returns unexpected format
       setExpenses(Array.isArray(expensesRes.data) ? expensesRes.data : []);
       setSettlements(Array.isArray(settlementsRes.data) ? settlementsRes.data : []);
     } catch (err) {
       setError(err.message || 'Failed to load history');
       console.error('History error:', err);
+      // FIX: Set empty arrays on error so UI doesn't break
+      setExpenses([]);
+      setSettlements([]);
     } finally {
       setLoading(false);
     }

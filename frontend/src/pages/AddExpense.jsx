@@ -19,16 +19,20 @@ const AddExpense = () => {
   const [error, setError] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
 
+  // FIX: Fetch friends on mount and when navigating back to this page
   useEffect(() => {
     fetchFriends();
-  }, []);
+  }, []); // Empty deps is correct - fetchFriends is stable
 
   const fetchFriends = async () => {
     try {
       const response = await friendsAPI.getAll();
-      setFriends(response.data);
+      // FIX: Ensure we always set an array, even if API returns unexpected format
+      setFriends(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error('Failed to fetch friends:', err);
+      // FIX: Set empty array on error so UI doesn't break
+      setFriends([]);
     }
   };
 

@@ -8,7 +8,6 @@ import AddExpense from './pages/AddExpense';
 import Friends from './pages/Friends';
 import DebtTracker from './pages/DebtTracker';
 import PaymentHistory from './pages/PaymentHistory';
-import './styles/modern.css';
 import './styles/App.css';
 
 function App() {
