@@ -148,7 +148,7 @@ const DebtTracker = () => {
               <div className="empty-state-icon">🎉</div>
               <div className="empty-state-title">All settled up!</div>
               <div className="empty-state-description">
-                No outstanding debts. Everyone is square!
+                No outstanding debts. Everyone's square!
               </div>
             </div>
           ) : (

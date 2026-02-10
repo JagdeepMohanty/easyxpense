@@ -169,9 +169,9 @@ const Friends = () => {
           {friends.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">👥</div>
-              <div className="empty-state-title">No friends added yet</div>
+              <div className="empty-state-title">No friends yet</div>
               <div className="empty-state-description">
-                Add your first friend above to start splitting expenses together!
+                Add friends above to start splitting expenses and tracking who owes what.
               </div>
             </div>
           ) : (

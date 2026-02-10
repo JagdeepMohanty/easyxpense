@@ -204,9 +204,9 @@ const AddExpense = () => {
                 {friends.length === 0 ? (
                   <div className="empty-state">
                     <div className="empty-state-icon">👥</div>
-                    <div className="empty-state-title">No friends added yet</div>
+                    <div className="empty-state-title">Add friends first</div>
                     <div className="empty-state-description">
-                      You need to add friends before creating expenses.
+                      You'll need at least one friend before creating an expense.
                     </div>
                     <Button 
                       as="a" 
@@ -214,7 +214,7 @@ const AddExpense = () => {
                       variant="primary"
                       className="mt-4"
                     >
-                      Add Friends First
+                      Go to Friends
                     </Button>
                   </div>
                 ) : (
