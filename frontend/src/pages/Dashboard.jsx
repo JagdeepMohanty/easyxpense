@@ -75,7 +75,6 @@ const Dashboard = () => {
   const youAreOwed = Object.values(balances).reduce((sum, balance) => 
     balance > 0 ? sum + balance : sum, 0
   );
-  const netBalance = youAreOwed - youOwe;
 
   return (
     <div className="dashboard">
