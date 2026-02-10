@@ -77,6 +77,8 @@ export const expensesAPI = {
     return retryRequest(() => api.get(url));
   },
   create: (expenseData) => api.post('/api/expenses', expenseData),
+  update: (id, expenseData) => api.put(`/api/expenses/${id}`, expenseData),
+  delete: (id) => api.delete(`/api/expenses/${id}`),
 };
 
 export const debtsAPI = {
@@ -96,6 +98,7 @@ export const settlementsAPI = {
     const url = groupId ? `/api/settlements?group_id=${groupId}` : '/api/settlements';
     return retryRequest(() => api.get(url));
   },
+  delete: (id) => api.delete(`/api/settlements/${id}`),
 };
 
 export const friendsAPI = {
@@ -104,6 +107,8 @@ export const friendsAPI = {
     return retryRequest(() => api.get(url));
   },
   add: (friendData) => api.post('/api/friends', friendData),
+  update: (id, friendData) => api.put(`/api/friends/${id}`, friendData),
+  delete: (id) => api.delete(`/api/friends/${id}`),
 };
 
 export const groupsAPI = {

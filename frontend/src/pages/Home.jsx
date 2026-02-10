@@ -8,8 +8,8 @@ const Home = () => {
         <h1>Welcome to EasyXpense</h1>
         <p>Split expenses with friends easily and track who owes what</p>
         <div className="hero-buttons">
-          <Link to="/dashboard" className="btn btn-primary">
-            Get Started
+          <Link to="/friends" className="btn btn-primary">
+            Add Friends
           </Link>
           <Link to="/add-expense" className="btn btn-secondary">
             Add Expense

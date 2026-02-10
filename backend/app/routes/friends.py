@@ -14,11 +14,20 @@ def add_friend():
     
     # Sanitize inputs
     name = sanitize_string(data.get('name', ''), max_length=100)
-    email = sanitize_email(data.get('email', ''))
+    phone = sanitize_string(data.get('phone', ''), max_length=15)
+    # Backward compatibility: accept email if phone not provided
+    if not phone:
+        phone = sanitize_email(data.get('email', ''))
     group_id = sanitize_string(data.get('group_id', ''), max_length=50) if data.get('group_id') else None
     
-    if not name or not email:
-        return jsonify({'success': False, 'error': 'Valid name and email are required'}), 400
+    if not name or not phone:
+        return jsonify({'success': False, 'error': 'Valid name and phone number are required'}), 400
+    
+    # Validate phone number format (Indian: 10 digits starting with 6-9)
+    if not phone.startswith('@'):  # Not an email (backward compat)
+        import re
+        if not re.match(r'^[6-9]\d{9}$', phone):
+            return jsonify({'success': False, 'error': 'Invalid phone number format'}), 400
     
     try:
         if current_app.db is None:
@@ -28,7 +37,7 @@ def add_friend():
         friends_collection = current_app.db.friends
         
         # Check if friend already exists in this group
-        query = {'email': email}
+        query = {'phone': phone}
         if group_id:
             query['group_id'] = group_id
         
@@ -39,7 +48,7 @@ def add_friend():
         # Add friend
         friend_data = {
             'name': name,
-            'email': email,
+            'phone': phone,
             'created_at': ObjectId().generation_time
         }
         
@@ -55,7 +64,7 @@ def add_friend():
             'data': {
                 '_id': str(result.inserted_id),
                 'name': name,
-                'email': email
+                'phone': phone
             }
         }), 201
         
@@ -86,3 +95,72 @@ def get_friends():
     except Exception as e:
         current_app.logger.error(f'Get friends error: {e}')
         return jsonify({'error': 'Failed to fetch friends'}), 500
+
+
+@friends_bp.route('/friends/<friend_id>', methods=['PUT'])
+def update_friend(friend_id):
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({'success': False, 'error': 'Request body is required'}), 400
+    
+    name = sanitize_string(data.get('name', ''), max_length=100)
+    phone = sanitize_string(data.get('phone', ''), max_length=15)
+    
+    if not name or not phone:
+        return jsonify({'success': False, 'error': 'Valid name and phone are required'}), 400
+    
+    # Validate phone format
+    import re
+    if not re.match(r'^[6-9]\d{9}$', phone):
+        return jsonify({'success': False, 'error': 'Invalid phone number format'}), 400
+    
+    try:
+        from bson import ObjectId
+        if current_app.db is None:
+            return jsonify({'success': False, 'error': 'Database not available'}), 503
+        
+        friends_collection = current_app.db.friends
+        
+        # Update friend
+        result = friends_collection.update_one(
+            {'_id': ObjectId(friend_id)},
+            {'$set': {'name': name, 'phone': phone}}
+        )
+        
+        if result.matched_count == 0:
+            return jsonify({'success': False, 'error': 'Friend not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'message': 'Friend updated successfully',
+            'data': {'_id': friend_id, 'name': name, 'phone': phone}
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f'Update friend error: {e}')
+        return jsonify({'success': False, 'error': 'Failed to update friend'}), 500
+
+@friends_bp.route('/friends/<friend_id>', methods=['DELETE'])
+def delete_friend(friend_id):
+    try:
+        from bson import ObjectId
+        if current_app.db is None:
+            return jsonify({'success': False, 'error': 'Database not available'}), 503
+        
+        friends_collection = current_app.db.friends
+        
+        # Delete friend
+        result = friends_collection.delete_one({'_id': ObjectId(friend_id)})
+        
+        if result.deleted_count == 0:
+            return jsonify({'success': False, 'error': 'Friend not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'message': 'Friend deleted successfully'
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f'Delete friend error: {e}')
+        return jsonify({'success': False, 'error': 'Failed to delete friend'}), 500

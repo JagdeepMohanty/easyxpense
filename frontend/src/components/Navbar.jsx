@@ -26,16 +26,16 @@ const Navbar = () => {
             Dashboard
           </Link>
           <Link 
-            to="/add-expense" 
-            className={`nav-link ${isActive('/add-expense') ? 'active' : ''}`}
-          >
-            Add Expense
-          </Link>
-          <Link 
             to="/friends" 
             className={`nav-link ${isActive('/friends') ? 'active' : ''}`}
           >
             Friends
+          </Link>
+          <Link 
+            to="/add-expense" 
+            className={`nav-link ${isActive('/add-expense') ? 'active' : ''}`}
+          >
+            Add Expense
           </Link>
           <Link 
             to="/debts" 
