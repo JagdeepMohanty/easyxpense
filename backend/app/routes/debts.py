@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app
+from app.middleware.auth import token_required
 from bson import ObjectId
 from app.utils.money import paisa_to_rupees
 from app.utils.debt_optimizer import calculate_optimized_debts
@@ -6,7 +7,9 @@ from app.utils.debt_optimizer import calculate_optimized_debts
 debts_bp = Blueprint('debts', __name__)
 
 @debts_bp.route('/debts', methods=['GET'])
+@token_required
 def get_debts():
+    user = request.current_user
     group_id = request.args.get('group_id')  # Optional filter
     optimize = request.args.get('optimize', 'true').lower() == 'true'  # Default: optimized
     
@@ -17,8 +20,10 @@ def get_debts():
         expenses_collection = current_app.db.expenses
         settlements_collection = current_app.db.settlements
         
-        # Build query for group filtering
-        query = {'group_id': group_id} if group_id else {}
+        # Build query for user and optional group filtering
+        query = {'user_id': user['_id']}
+        if group_id:
+            query['group_id'] = group_id
         
         expenses = list(expenses_collection.find(query))
         settlements = list(settlements_collection.find(query))

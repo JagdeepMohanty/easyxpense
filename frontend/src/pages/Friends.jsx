@@ -5,6 +5,7 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import EditFriendModal from '../components/modals/EditFriendModal';
 import ConfirmDialog from '../components/modals/ConfirmDialog';
+import Pagination from '../components/Pagination';
 
 const Friends = () => {
   const [friends, setFriends] = useState([]);
@@ -15,15 +16,26 @@ const Friends = () => {
   const [editingFriend, setEditingFriend] = useState(null);
   const [deletingFriend, setDeletingFriend] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 10;
 
-  const fetchFriends = useCallback(async () => {
+  const fetchFriends = useCallback(async (page = 1) => {
     try {
-      const response = await friendsAPI.getAll();
-      setFriends(Array.isArray(response.data) ? response.data : []);
+      setLoading(true);
+      const response = await friendsAPI.getAll(null, page, limit);
+      const { data, totalPages: pages, total: count } = response.data;
+      setFriends(Array.isArray(data) ? data : []);
+      setTotalPages(pages || 1);
+      setTotal(count || 0);
+      setCurrentPage(page);
     } catch (err) {
       setFriends([]);
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [limit]);
 
   useEffect(() => {
     fetchFriends();
@@ -65,7 +77,7 @@ const Friends = () => {
         phone: newFriend.phone.trim()
       });
       setNewFriend({ name: '', phone: '' });
-      await fetchFriends();
+      await fetchFriends(1);
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Failed to add friend');
     } finally {
@@ -86,28 +98,32 @@ const Friends = () => {
       setActionLoading(true);
       await friendsAPI.update(editingFriend._id, updatedData);
       setEditingFriend(null);
-      await fetchFriends();
+      await fetchFriends(currentPage);
     } catch (err) {
       setError(err.message || 'Failed to update friend');
     } finally {
       setActionLoading(false);
     }
-  }, [editingFriend, fetchFriends]);
+  }, [editingFriend, fetchFriends, currentPage]);
 
   const handleConfirmDelete = useCallback(async () => {
     try {
       setActionLoading(true);
       await friendsAPI.delete(deletingFriend._id);
       setDeletingFriend(null);
-      await fetchFriends();
+      await fetchFriends(currentPage);
     } catch (err) {
       setError(err.message || 'Failed to delete friend');
     } finally {
       setActionLoading(false);
     }
-  }, [deletingFriend, fetchFriends]);
+  }, [deletingFriend, fetchFriends, currentPage]);
 
-  const friendCount = useMemo(() => friends.length, [friends.length]);
+  const handlePageChange = useCallback((page) => {
+    fetchFriends(page);
+  }, [fetchFriends]);
+
+  const friendCount = useMemo(() => total, [total]);
 
   return (
     <div className="friends">
@@ -173,7 +189,12 @@ const Friends = () => {
           </div>
         </Card.Header>
         <Card.Body>
-          {friendCount === 0 ? (
+          {loading && friends.length === 0 ? (
+            <div className="loading">
+              <div className="spinner"></div>
+              Loading friends...
+            </div>
+          ) : friendCount === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">👥</div>
               <div className="empty-state-title">No friends yet</div>
@@ -212,6 +233,13 @@ const Friends = () => {
           )}
         </Card.Body>
       </Card>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        loading={loading}
+      />
 
       {friendCount > 0 && (
         <Card className="mt-8">

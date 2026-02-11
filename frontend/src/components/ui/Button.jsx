@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Button = ({ 
+const Button = React.memo(({ 
   children, 
   variant = 'primary', 
   size = 'md', 
@@ -42,6 +42,8 @@ const Button = ({
       {!loading && children}
     </Component>
   );
-};
+});
+
+Button.displayName = 'Button';
 
 export default Button;

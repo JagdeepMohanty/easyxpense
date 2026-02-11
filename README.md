@@ -9,12 +9,14 @@ A modern expense splitting web application built with React, Flask, and MongoDB 
 
 ## 🚀 Features
 
+- 🔐 **JWT Authentication** - Secure user registration and login
+- 👤 **User-Scoped Data** - Each user's data is private and isolated
 - 💰 Split expenses equally among friends
 - 📊 Track who owes what with optimized debt calculations
 - 💳 Record settlements and payment history
 - 🇮🇳 Indian Rupee (INR) support with proper formatting
 - 📱 Responsive design for mobile and desktop
-- 🚫 No authentication required - simple and fast
+- 🔄 Session persistence across page refreshes
 
 ## 🏗️ Tech Stack
 
@@ -29,13 +31,15 @@ A modern expense splitting web application built with React, Flask, and MongoDB 
 - Flask 3.0.0
 - Flask-CORS 4.0.0
 - PyMongo 4.6.1
+- bcrypt 4.1.2 (Password hashing)
+- PyJWT 2.8.0 (JWT tokens)
 - Gunicorn 21.2.0
 - Deployed on Render
 
 ### Database
 - MongoDB Atlas (Free Tier)
 - Database: `EasyXpense`
-- Collections: `friends`, `expenses`, `settlements`, `groups`
+- Collections: `users`, `friends`, `expenses`, `settlements`, `groups`
 
 ## 📁 Project Structure
 
@@ -43,18 +47,21 @@ A modern expense splitting web application built with React, Flask, and MongoDB 
 easyxpense/
 ├── backend/
 │   ├── app/
-│   │   ├── models/         # Data models
-│   │   ├── routes/         # API endpoints
+│   │   ├── middleware/     # Auth middleware
+│   │   ├── models/         # Data models (User, Expense, Group)
+│   │   ├── routes/         # API endpoints (auth, friends, expenses, etc.)
 │   │   ├── utils/          # Utilities (money, sanitization, debt optimizer)
 │   │   └── __init__.py     # Flask app initialization
 │   ├── wsgi.py             # Production WSGI entry
 │   ├── run.py              # Development server
+│   ├── migrate_data.py     # Data migration script
 │   ├── gunicorn.conf.py    # Gunicorn configuration
 │   └── requirements.txt    # Python dependencies
 ├── frontend/
 │   ├── src/
 │   │   ├── components/     # React components
-│   │   ├── pages/          # Page components
+│   │   ├── context/        # Auth context
+│   │   ├── pages/          # Page components (Login, Register, Dashboard, etc.)
 │   │   ├── services/       # API service
 │   │   └── utils/          # Utilities
 │   ├── public/
@@ -94,8 +101,14 @@ easyxpense/
 4. Create `.env` file:
    ```bash
    MONGO_URI=your_mongodb_uri
+   JWT_SECRET_KEY=your-secret-key
    FLASK_ENV=development
    PORT=5000
+   ```
+
+   Generate JWT secret:
+   ```bash
+   python -c "import secrets; print(secrets.token_urlsafe(32))"
    ```
 
 5. Run development server:
@@ -132,6 +145,7 @@ easyxpense/
 **Environment Variables**:
 ```
 MONGO_URI=mongodb+srv://easyXpense:Jagdeep2607@easyxpense.sfpwthl.mongodb.net/EasyXpense?retryWrites=true&w=majority&appName=EasyXpense
+JWT_SECRET_KEY=<generate-secure-key>
 FLASK_ENV=production
 PORT=10000
 GUNICORN_WORKERS=2
@@ -159,48 +173,84 @@ REACT_APP_VERSION=1.0.0
 **Database User**: `easyXpense` with read/write permissions  
 **Database Name**: `EasyXpense`
 
+**Required Indexes**:
+```javascript
+db.users.createIndex({ email: 1 }, { unique: true, sparse: true })
+db.users.createIndex({ phone: 1 }, { unique: true, sparse: true })
+db.friends.createIndex({ user_id: 1, name: 1 })
+db.expenses.createIndex({ user_id: 1, date: -1 })
+db.settlements.createIndex({ user_id: 1, date: -1 })
+db.groups.createIndex({ user_id: 1, created_at: -1 })
+```
+
 ## 🔧 API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login user
+- `POST /api/auth/logout` - Logout user
 
 ### Health
 - `GET /health` - Health check
 - `GET /api/health` - Detailed health check
 
-### Friends
-- `GET /api/friends` - List all friends
+### Friends (Protected)
+- `GET /api/friends` - List user's friends
 - `POST /api/friends` - Add new friend
+- `PUT /api/friends/:id` - Update friend
+- `DELETE /api/friends/:id` - Delete friend
 
-### Expenses
-- `GET /api/expenses` - List all expenses
+### Expenses (Protected)
+- `GET /api/expenses` - List user's expenses
 - `POST /api/expenses` - Create new expense
 
-### Debts
+### Debts (Protected)
 - `GET /api/debts` - Get optimized debt settlements
 
-### Settlements
+### Settlements (Protected)
 - `GET /api/settlements` - List settlement history
 - `POST /api/settlements` - Record new settlement
 
-### Groups
-- `GET /api/groups` - List all groups
+### Groups (Protected)
+- `GET /api/groups` - List user's groups
 - `POST /api/groups` - Create new group
 - `DELETE /api/groups/:id` - Delete group
 
+**Note**: All endpoints except auth and health require JWT token in Authorization header.
+
 ## 🔐 Security Features
 
-- CORS restricted to Netlify origin only
-- Input sanitization on all endpoints
-- Request size limits (10MB max)
-- Security headers (X-Frame-Options, X-XSS-Protection, HSTS)
-- No hardcoded credentials
-- Environment variable configuration
+- **JWT Authentication** - Secure token-based authentication with type validation
+- **Refresh Tokens** - 7-day sessions with automatic token rotation
+- **Rate Limiting** - 5 login attempts per 15 minutes per identifier
+- **Password Hashing** - bcrypt with salt rounds (10-12)
+- **User-Scoped Data** - All data isolated by user_id
+- **Protected Routes** - All endpoints require authentication
+- **Token Rotation** - Old refresh tokens revoked on refresh
+- **Token Reuse Prevention** - Database validation before accepting tokens
+- **Automatic Token Refresh** - Seamless frontend token renewal
+- **Input Validation** - Length limits and format validation
+- **CORS** - Restricted to Netlify origin only
+- **Input Sanitization** - All user inputs sanitized
+- **Request Size Limits** - 10MB max
+- **Security Headers** - X-Frame-Options, X-XSS-Protection, HSTS
+- **No Hardcoded Credentials** - Environment variable configuration
+- **Session Management** - Single session per user, all tokens revoked on login
+- **Generic Error Messages** - "Invalid credentials" for all auth failures
 
 ## ⚡ Performance
 
 - Optimized debt calculation algorithm (60-90% fewer transactions)
+- MongoDB field projection (only fetches required fields)
 - Connection pooling for MongoDB
+- Database indexes on all query fields
+- Pagination enforcement (max 50 items per page)
+- React component memoization (Button, Pagination)
+- useCallback for event handlers
 - Gunicorn with 2 workers for Render free tier
 - 30s timeout handling for cold starts
 - Automatic retry logic on frontend
+- Bundle size: 99.25 KB gzipped
 
 ## 🧪 Testing
 
@@ -234,6 +284,18 @@ curl -I https://easyxpense.netlify.app/
 - **MongoDB Atlas**: 512MB storage
 
 Current usage is well within all limits.
+
+## 📚 Documentation
+
+- **Production Hardening**: See `PRODUCTION_HARDENING.md` - Complete hardening summary
+- **Production Deployment**: See `PRODUCTION_READY.md` - Complete deployment summary
+- **Security Checklist**: See `PRODUCTION_SECURITY.md` - Comprehensive security verification
+- **Environment Setup**: See `DEPLOYMENT.md` - Environment variables and configuration
+- **Backend Auth**: See `backend/AUTH_IMPLEMENTATION.md` - JWT authentication details
+- **Backend Authorization**: See `backend/AUTHORIZATION_IMPLEMENTATION.md` - User-scoped data isolation
+- **Refresh Tokens**: See `backend/REFRESH_TOKEN_IMPLEMENTATION.md` - Token rotation system
+- **Frontend Auth**: See `frontend/FRONTEND_REFRESH_TOKEN.md` - Automatic token refresh
+- **Data Migration**: See `backend/migrate_data.py` - User data migration script
 
 ## 🤝 Contributing
 

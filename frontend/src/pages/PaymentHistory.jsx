@@ -1,42 +1,68 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { expensesAPI, settlementsAPI } from '../services/api';
 import { formatCurrency } from '../utils/currency';
+import Pagination from '../components/Pagination';
 
 const PaymentHistory = () => {
   const [expenses, setExpenses] = useState([]);
   const [settlements, setSettlements] = useState([]);
   const [activeTab, setActiveTab] = useState('expenses');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [expensesPage, setExpensesPage] = useState(1);
+  const [expensesTotalPages, setExpensesTotalPages] = useState(1);
+  const [expensesTotal, setExpensesTotal] = useState(0);
+  const [settlementsPage, setSettlementsPage] = useState(1);
+  const [settlementsTotalPages, setSettlementsTotalPages] = useState(1);
+  const [settlementsTotal, setSettlementsTotal] = useState(0);
+  const limit = 10;
 
-  // FIX: Fetch history on mount and when navigating back to this page
-  useEffect(() => {
-    fetchHistory();
-  }, []); // Empty deps is correct - fetchHistory is stable
-
-  const fetchHistory = async () => {
+  const fetchExpenses = useCallback(async (page = 1) => {
     try {
       setLoading(true);
-      setError('');
-      
-      const [expensesRes, settlementsRes] = await Promise.all([
-        expensesAPI.getAll(),
-        settlementsAPI.getHistory()
-      ]);
-      
-      // FIX: Ensure we always set arrays, even if API returns unexpected format
-      setExpenses(Array.isArray(expensesRes.data) ? expensesRes.data : []);
-      setSettlements(Array.isArray(settlementsRes.data) ? settlementsRes.data : []);
+      const response = await expensesAPI.getAll(null, page, limit);
+      const { data, totalPages, total } = response.data;
+      setExpenses(Array.isArray(data) ? data : []);
+      setExpensesTotalPages(totalPages || 1);
+      setExpensesTotal(total || 0);
+      setExpensesPage(page);
     } catch (err) {
-      setError(err.message || 'Failed to load history');
-      console.error('History error:', err);
-      // FIX: Set empty arrays on error so UI doesn't break
       setExpenses([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [limit]);
+
+  const fetchSettlements = useCallback(async (page = 1) => {
+    try {
+      setLoading(true);
+      const response = await settlementsAPI.getHistory(null, page, limit);
+      const { data, totalPages, total } = response.data;
+      setSettlements(Array.isArray(data) ? data : []);
+      setSettlementsTotalPages(totalPages || 1);
+      setSettlementsTotal(total || 0);
+      setSettlementsPage(page);
+    } catch (err) {
       setSettlements([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [limit]);
+
+  useEffect(() => {
+    if (activeTab === 'expenses') {
+      fetchExpenses();
+    } else {
+      fetchSettlements();
+    }
+  }, [activeTab, fetchExpenses, fetchSettlements]);
+
+  const handleExpensesPageChange = useCallback((page) => {
+    fetchExpenses(page);
+  }, [fetchExpenses]);
+
+  const handleSettlementsPageChange = useCallback((page) => {
+    fetchSettlements(page);
+  }, [fetchSettlements]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -48,22 +74,6 @@ const PaymentHistory = () => {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="payment-history">
-        <div className="loading">Loading history...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="payment-history">
-        <div className="error">{error}</div>
-      </div>
-    );
-  }
-
   return (
     <div className="payment-history">
       <div className="mb-8">
@@ -71,7 +81,6 @@ const PaymentHistory = () => {
         <p className="text-gray-600">View all your expenses and settlements</p>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-2 mb-6 border-b border-gray-200">
         <button
           className={`px-6 py-3 font-medium text-sm transition-colors relative ${
@@ -81,7 +90,7 @@ const PaymentHistory = () => {
           }`}
           onClick={() => setActiveTab('expenses')}
         >
-          Expenses ({expenses.length})
+          Expenses ({expensesTotal})
         </button>
         <button
           className={`px-6 py-3 font-medium text-sm transition-colors relative ${
@@ -91,14 +100,18 @@ const PaymentHistory = () => {
           }`}
           onClick={() => setActiveTab('settlements')}
         >
-          Settlements ({settlements.length})
+          Settlements ({settlementsTotal})
         </button>
       </div>
 
-      {/* Content */}
       <div className="card">
         <div className="card-body">
-          {activeTab === 'expenses' ? (
+          {loading ? (
+            <div className="loading">
+              <div className="spinner"></div>
+              Loading...
+            </div>
+          ) : activeTab === 'expenses' ? (
             expenses.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-state-icon">💸</div>
@@ -175,8 +188,24 @@ const PaymentHistory = () => {
           )}
         </div>
       </div>
+
+      {activeTab === 'expenses' ? (
+        <Pagination
+          currentPage={expensesPage}
+          totalPages={expensesTotalPages}
+          onPageChange={handleExpensesPageChange}
+          loading={loading}
+        />
+      ) : (
+        <Pagination
+          currentPage={settlementsPage}
+          totalPages={settlementsTotalPages}
+          onPageChange={handleSettlementsPageChange}
+          loading={loading}
+        />
+      )}
     </div>
   );
 };
 
-export default PaymentHistory;
+export default React.memo(PaymentHistory);

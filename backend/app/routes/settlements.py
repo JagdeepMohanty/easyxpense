@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app
+from app.middleware.auth import token_required
 from bson import ObjectId
 from datetime import datetime
 from app.utils.money import rupees_to_paisa, paisa_to_rupees, validate_amount_paisa
@@ -6,8 +7,10 @@ from app.utils.money import rupees_to_paisa, paisa_to_rupees, validate_amount_pa
 settlements_bp = Blueprint('settlements', __name__)
 
 @settlements_bp.route('/settlements', methods=['POST'])
+@token_required
 def create_settlement():
     current_app.logger.info('Creating new settlement')
+    user = request.current_user
     data = request.get_json()
     current_app.logger.info(f'Settlement data received: {data}')
     
@@ -40,6 +43,7 @@ def create_settlement():
         settlements_collection = current_app.db.settlements
         
         settlement_data = {
+            'user_id': user['_id'],
             'fromUser': from_user,
             'toUser': to_user,
             'amount_paisa': amount_paisa,  # Store as integer paisa
@@ -70,16 +74,38 @@ def create_settlement():
         return jsonify({'success': False, 'error': 'Failed to create settlement'}), 500
 
 @settlements_bp.route('/settlements', methods=['GET'])
+@token_required
 def get_settlements():
-    group_id = request.args.get('group_id')  # Optional filter
+    user = request.current_user
+    group_id = request.args.get('group_id')
+    page = int(request.args.get('page', 1))
+    limit = int(request.args.get('limit', 10))
+    
+    # Validate pagination params
+    page = max(1, page)
+    limit = min(max(1, limit), 50)
     
     try:
         if current_app.db is None:
             return jsonify({'error': 'Database not available'}), 503
             
         settlements_collection = current_app.db.settlements
-        query = {'group_id': group_id} if group_id else {}
-        settlements = list(settlements_collection.find(query).sort('date', -1))
+        query = {'user_id': user['_id']}
+        if group_id:
+            query['group_id'] = group_id
+        
+        # Get total count
+        total = settlements_collection.count_documents(query)
+        
+        # Calculate pagination
+        skip = (page - 1) * limit
+        total_pages = (total + limit - 1) // limit
+        
+        # Fetch paginated data with field projection
+        settlements = list(settlements_collection.find(
+            query,
+            {'fromUser': 1, 'toUser': 1, 'amount': 1, 'date': 1}
+        ).sort('date', -1).skip(skip).limit(limit))
         
         # Convert ObjectIds to strings and format dates
         for settlement in settlements:
@@ -87,7 +113,13 @@ def get_settlements():
             if 'date' in settlement:
                 settlement['date'] = settlement['date'].isoformat()
         
-        return jsonify(settlements), 200
+        return jsonify({
+            'data': settlements,
+            'page': page,
+            'limit': limit,
+            'total': total,
+            'totalPages': total_pages
+        }), 200
         
     except Exception as e:
         current_app.logger.error(f'Get settlements error: {e}')

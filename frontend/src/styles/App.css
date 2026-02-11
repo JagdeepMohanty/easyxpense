@@ -1361,3 +1361,32 @@ p {
   gap: 12px;
   justify-content: flex-end;
 }
+
+/* ===== PAGINATION ===== */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 16px 0;
+}
+
+.pagination-info {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4b5563;
+  min-width: 100px;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .pagination {
+    gap: 12px;
+  }
+  
+  .pagination-info {
+    font-size: 13px;
+    min-width: 80px;
+  }
+}

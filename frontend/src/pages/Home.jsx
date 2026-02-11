@@ -1,19 +1,35 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
+  const { isAuthenticated } = useAuth();
+
   return (
     <div className="home">
       <div className="hero-section">
         <h1>Welcome to EasyXpense</h1>
         <p>Split expenses with friends easily and track who owes what</p>
         <div className="hero-buttons">
-          <Link to="/friends" className="btn btn-primary">
-            Add Friends
-          </Link>
-          <Link to="/add-expense" className="btn btn-secondary">
-            Add Expense
-          </Link>
+          {isAuthenticated ? (
+            <>
+              <Link to="/friends" className="btn btn-primary">
+                Add Friends
+              </Link>
+              <Link to="/add-expense" className="btn btn-secondary">
+                Add Expense
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link to="/register" className="btn btn-primary">
+                Get Started
+              </Link>
+              <Link to="/login" className="btn btn-secondary">
+                Login
+              </Link>
+            </>
+          )}
         </div>
       </div>
 

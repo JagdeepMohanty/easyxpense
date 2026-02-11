@@ -29,10 +29,17 @@ def create_app():
     
     # Configuration
     mongo_uri = os.getenv('MONGO_URI')
+    jwt_secret = os.getenv('JWT_SECRET_KEY')
     
     if not mongo_uri:
         app.logger.error('MONGO_URI environment variable is required')
         raise ValueError('MONGO_URI environment variable is required')
+    
+    if not jwt_secret:
+        app.logger.error('JWT_SECRET_KEY environment variable is required')
+        raise ValueError('JWT_SECRET_KEY environment variable is required')
+    
+    app.config['JWT_SECRET_KEY'] = jwt_secret
     
     app.logger.info(f'Flask environment: {os.getenv("FLASK_ENV", "development")}')
     
@@ -45,7 +52,7 @@ def create_app():
     CORS(app, 
          origins=cors_origins, 
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-         allow_headers=['Content-Type'],
+         allow_headers=['Content-Type', 'Authorization'],
          supports_credentials=False,
          max_age=3600)
     
@@ -97,6 +104,7 @@ def create_app():
     
     # Register blueprints
     try:
+        from app.routes.auth import auth_bp
         from app.routes.friends import friends_bp
         from app.routes.expenses import expenses_bp
         from app.routes.settlements import settlements_bp
@@ -104,6 +112,7 @@ def create_app():
         from app.routes.health import health_bp
         from app.routes.groups import groups_bp
         
+        app.register_blueprint(auth_bp, url_prefix='/api')
         app.register_blueprint(friends_bp, url_prefix='/api')
         app.register_blueprint(expenses_bp, url_prefix='/api')
         app.register_blueprint(settlements_bp, url_prefix='/api')
@@ -156,34 +165,36 @@ def create_app():
     # Enhanced error handlers
     @app.errorhandler(400)
     def bad_request(error):
-        app.logger.warning(f'Bad request: {error}')
-        return jsonify({'error': 'Bad request', 'message': str(error)}), 400
+        return jsonify({'success': False, 'error': 'Bad request'}), 400
     
     @app.errorhandler(404)
     def not_found(error):
         if request.path not in ['/', '/health']:
-            app.logger.warning(f'Endpoint not found: {request.url}')
-        return jsonify({'error': 'Endpoint not found'}), 404
+            app.logger.warning(f'Endpoint not found: {request.path}')
+        return jsonify({'success': False, 'error': 'Endpoint not found'}), 404
     
     @app.errorhandler(405)
     def method_not_allowed(error):
-        app.logger.warning(f'Method not allowed: {request.method} {request.url}')
-        return jsonify({'error': 'Method not allowed'}), 405
+        return jsonify({'success': False, 'error': 'Method not allowed'}), 405
     
     @app.errorhandler(413)
     def request_entity_too_large(error):
         app.logger.warning(f'Request too large from {request.remote_addr}')
-        return jsonify({'error': 'Request body too large (max 10MB)'}), 413
+        return jsonify({'success': False, 'error': 'Request body too large'}), 413
+    
+    @app.errorhandler(429)
+    def too_many_requests(error):
+        return jsonify({'success': False, 'error': 'Too many requests'}), 429
     
     @app.errorhandler(500)
     def internal_error(error):
         app.logger.error(f'Internal server error: {error}')
-        return jsonify({'error': 'Internal server error'}), 500
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
     
     @app.errorhandler(503)
     def service_unavailable(error):
         app.logger.error(f'Service unavailable: {error}')
-        return jsonify({'error': 'Service temporarily unavailable'}), 503
+        return jsonify({'success': False, 'error': 'Service temporarily unavailable'}), 503
     
     app.logger.info('EasyXpense Backend initialized successfully')
     return app

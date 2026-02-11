@@ -24,15 +24,15 @@ const Dashboard = () => {
       setError('');
       
       const [expensesRes, debtsRes] = await Promise.all([
-        expensesAPI.getAll(),
+        expensesAPI.getAll(null, 1, 5),
         debtsAPI.getAll()
       ]);
       
-      // FIX: Handle API response - data might be nested or direct array
-      const expensesData = Array.isArray(expensesRes.data) ? expensesRes.data : [];
-      setExpenses(expensesData.slice(0, 5)); // Show only recent 5
+      // Handle paginated response
+      const expensesData = expensesRes.data.data || expensesRes.data;
+      setExpenses(Array.isArray(expensesData) ? expensesData : []);
       
-      // FIX: Handle both optimized and legacy debt response formats
+      // Handle both optimized and legacy debt response formats
       const debtsData = debtsRes.data.debts || debtsRes.data;
       const balancesData = debtsRes.data.balances || {};
       
@@ -40,7 +40,6 @@ const Dashboard = () => {
       setBalances(balancesData);
     } catch (err) {
       setError(err.message || 'Failed to load dashboard data');
-      console.error('Dashboard error:', err);
     } finally {
       setLoading(false);
     }

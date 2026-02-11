@@ -37,7 +37,7 @@ class Expense:
         
         return list(set(participants))  # Remove duplicates
     
-    def create_expense(self, description, amount, payer, participants, group_id=None):
+    def create_expense(self, description, amount, payer, participants, group_id=None, user_id=None):
         """Create expense with integer paisa storage"""
         import logging
         logger = logging.getLogger(__name__)
@@ -64,6 +64,7 @@ class Expense:
             })
         
         expense_data = {
+            'user_id': user_id,
             'description': description.strip(),
             'amount_paisa': amount_paisa,  # Store as integer paisa
             'amount': paisa_to_rupees(amount_paisa),  # Also store rupees for backward compatibility
