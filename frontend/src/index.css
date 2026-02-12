@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply transition-colors duration-200;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900 dark:bg-[#0F172A] dark:text-gray-100;
+  }
+}
+
+@layer utilities {
+  /* Page Animations */
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+
+  /* Hover Effects */
+  .hover-lift {
+    @apply transition-all duration-200;
+  }
+  
+  .hover-lift:hover {
+    @apply -translate-y-1 shadow-soft-lg;
+  }
+  
+  .hover-scale {
+    @apply transition-transform duration-200;
+  }
+  
+  .hover-scale:hover {
+    @apply scale-[1.02];
+  }
+
+  /* Loading Skeleton */
+  .skeleton {
+    @apply bg-gray-200 dark:bg-gray-700 animate-pulse rounded;
+  }
+  
+  .skeleton-text {
+    @apply h-4 skeleton mb-2;
+  }
+  
+  .skeleton-title {
+    @apply h-6 skeleton mb-3;
+  }
+  
+  .skeleton-card {
+    @apply h-32 skeleton;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Smooth Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-500;
+}

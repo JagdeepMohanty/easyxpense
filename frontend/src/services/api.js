@@ -27,23 +27,13 @@ const processQueue = (error, token = null) => {
 
 // Request interceptor
 api.interceptors.request.use(
-  (config) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`API Request: ${config.method.toUpperCase()} ${config.url}`);
-    }
-    return config;
-  },
+  (config) => config,
   (error) => Promise.reject(error)
 );
 
 // Response interceptor with automatic token refresh
 api.interceptors.response.use(
-  (response) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`API Response: ${response.config.url} - ${response.status}`);
-    }
-    return response;
-  },
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
@@ -131,9 +121,6 @@ api.interceptors.response.use(
       error.message = 'Cannot reach server. Please check your connection or try again later.';
     }
     
-    if (process.env.NODE_ENV === 'development') {
-      console.error('API Error:', error.message);
-    }
     return Promise.reject(error);
   }
 );
@@ -144,9 +131,6 @@ const retryRequest = async (requestFn, retries = 2, delay = 2000) => {
     return await requestFn();
   } catch (error) {
     if (retries > 0 && (error.code === 'ECONNABORTED' || !error.response)) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Retrying request... (${retries} attempts left)`);
-      }
       await new Promise(resolve => setTimeout(resolve, delay));
       return retryRequest(requestFn, retries - 1, delay);
     }
