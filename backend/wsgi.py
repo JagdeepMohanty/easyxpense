@@ -1,4 +1,6 @@
 from app import create_app
+import os
 
-# Create Flask application for production deployment
-app = create_app()
+# Production: Environment variables must be set on Render
+# No .env loading in production
+app = create_app('production')

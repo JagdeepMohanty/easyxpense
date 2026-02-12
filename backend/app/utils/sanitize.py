@@ -1,11 +1,12 @@
 """Input sanitization utilities for security"""
 import re
-from typing import Any, Optional
+import html
+from typing import Any, Optional, Dict
 
-def sanitize_string(value: Any, max_length: int = 500) -> str:
-    """Sanitize string input by stripping whitespace and limiting length"""
+def sanitize_input(value: Any, max_length: int = 500) -> str:
+    """Sanitize general input with XSS prevention"""
     if not isinstance(value, str):
-        return str(value)
+        value = str(value)
     
     # Strip whitespace
     sanitized = value.strip()
@@ -14,7 +15,33 @@ def sanitize_string(value: Any, max_length: int = 500) -> str:
     if len(sanitized) > max_length:
         sanitized = sanitized[:max_length]
     
+    # Escape HTML to prevent XSS
+    sanitized = html.escape(sanitized)
+    
     return sanitized
+
+def sanitize_dict(data: Dict[str, Any], allowed_keys: Optional[list] = None) -> Dict[str, Any]:
+    """Sanitize dictionary by filtering keys and escaping values"""
+    if not isinstance(data, dict):
+        return {}
+    
+    sanitized = {}
+    for key, value in data.items():
+        # Filter allowed keys if specified
+        if allowed_keys and key not in allowed_keys:
+            continue
+        
+        # Sanitize string values
+        if isinstance(value, str):
+            sanitized[key] = html.escape(value.strip())
+        else:
+            sanitized[key] = value
+    
+    return sanitized
+
+def sanitize_string(value: Any, max_length: int = 500) -> str:
+    """Sanitize string input (alias for sanitize_input for backward compatibility)"""
+    return sanitize_input(value, max_length)
 
 def sanitize_email(email: Any) -> Optional[str]:
     """Validate and sanitize email address"""

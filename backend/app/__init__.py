@@ -2,69 +2,62 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pymongo import MongoClient
 import os
-from dotenv import load_dotenv
 import logging
 import sys
 
-# Load environment variables
-load_dotenv()
-
-def create_app():
+def create_app(config_name=None):
     app = Flask(__name__)
     
-    # Enhanced logging configuration
-    if os.getenv('FLASK_ENV') == 'production':
+    # Determine environment
+    if config_name is None:
+        config_name = os.getenv('FLASK_ENV', 'development')
+    
+    # Load configuration
+    from app.config import config
+    config_class = config.get(config_name, config['default'])
+    app.config.from_object(config_class)
+    
+    # Validate configuration
+    try:
+        config_class.validate()
+    except ValueError as e:
+        logging.error(f'Configuration error: {e}')
+        raise
+    
+    # Logging configuration
+    if app.config['DEBUG']:
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format='%(asctime)s %(levelname)s: %(message)s'
+        )
+    else:
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s %(levelname)s: %(message)s',
             handlers=[logging.StreamHandler(sys.stdout)]
         )
-    else:
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format='%(asctime)s %(levelname)s: %(message)s'
-        )
     
-    app.logger.info('Starting EasyXpense Backend...')
+    app.logger.info(f'Starting EasyXpense Backend in {config_name} mode...')
     
-    # Configuration
-    mongo_uri = os.getenv('MONGO_URI')
-    jwt_secret = os.getenv('JWT_SECRET_KEY')
-    
-    if not mongo_uri:
-        app.logger.error('MONGO_URI environment variable is required')
-        raise ValueError('MONGO_URI environment variable is required')
-    
-    if not jwt_secret:
-        app.logger.error('JWT_SECRET_KEY environment variable is required')
-        raise ValueError('JWT_SECRET_KEY environment variable is required')
-    
-    app.config['JWT_SECRET_KEY'] = jwt_secret
-    
-    app.logger.info(f'Flask environment: {os.getenv("FLASK_ENV", "development")}')
-    
-    # Strict CORS configuration
-    cors_origins = ['https://easyxpense.netlify.app']
-    if os.getenv('FLASK_ENV') == 'development':
-        cors_origins.extend(['http://localhost:3000', 'http://localhost:5173'])
-    
-    app.logger.info(f'CORS origins: {cors_origins}')
+    # CORS configuration
     CORS(app, 
-         origins=cors_origins, 
+         origins=app.config['CORS_ORIGINS'], 
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
          allow_headers=['Content-Type', 'Authorization'],
          supports_credentials=False,
          max_age=3600)
     
-    # Request size limits (10MB max)
-    app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
+    app.logger.info(f'CORS origins: {app.config["CORS_ORIGINS"]}')
     
-    # MongoDB connection with timeouts
+    # Request size limits
+    # Already set via app.config['MAX_CONTENT_LENGTH']
+    
+    # MongoDB connection
     app.db = None
     try:
         app.logger.info('Connecting to MongoDB...')
         client = MongoClient(
-            mongo_uri, 
+            app.config['MONGO_URI'], 
             serverSelectionTimeoutMS=10000,
             connectTimeoutMS=10000,
             socketTimeoutMS=10000,
@@ -134,7 +127,7 @@ def create_app():
             return jsonify({
                 'status': 'ok',
                 'service': 'EasyXpense Backend',
-                'environment': os.getenv('FLASK_ENV', 'development'),
+                'environment': app.config.get('ENV', 'production'),
                 'database': db_status
             }), 200
         except Exception as e:

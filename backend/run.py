@@ -1,5 +1,10 @@
-import os
 from app import create_app
+import os
+
+# Load .env only in development
+if os.getenv('FLASK_ENV') == 'development':
+    from dotenv import load_dotenv
+    load_dotenv()
 
 app = create_app()
 
