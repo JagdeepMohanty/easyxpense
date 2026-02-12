@@ -5,7 +5,7 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import EditFriendModal from '../components/modals/EditFriendModal';
 import ConfirmDialog from '../components/modals/ConfirmDialog';
-import Pagination from '../components/Pagination';
+import Pagination from '../components/dashboard/Pagination';
 
 const Friends = () => {
   const [friends, setFriends] = useState([]);

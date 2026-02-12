@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { expensesAPI, debtsAPI } from '../services/api';
 import { formatCurrency } from '../utils/currency';
@@ -6,7 +6,6 @@ import SummaryCard from '../components/dashboard/SummaryCard';
 import ExpenseTable from '../components/dashboard/ExpenseTable';
 import Charts from '../components/dashboard/Charts';
 import Pagination from '../components/dashboard/Pagination';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
 import ErrorState from '../components/ui/ErrorState';
 import { SkeletonCard, SkeletonChart } from '../components/ui/Skeleton';
 
@@ -20,11 +19,7 @@ const Dashboard = () => {
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [currentPage]);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -50,7 +45,11 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   // Calculate summary statistics
   const totalExpenses = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { expensesAPI, settlementsAPI } from '../services/api';
 import { formatCurrency } from '../utils/currency';
-import Pagination from '../components/Pagination';
+import Pagination from '../components/dashboard/Pagination';
 
 const PaymentHistory = () => {
   const [expenses, setExpenses] = useState([]);
