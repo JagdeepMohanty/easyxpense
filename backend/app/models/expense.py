@@ -2,6 +2,8 @@ from bson import ObjectId
 from datetime import datetime
 from app.utils.money import rupees_to_paisa, paisa_to_rupees, split_equally, validate_amount_paisa
 
+CATEGORIES = ['Food', 'Transport', 'Entertainment', 'Shopping', 'Bills', 'Healthcare', 'Education', 'Others']
+
 class Expense:
     def __init__(self, db):
         self.collection = db.expenses
@@ -37,12 +39,15 @@ class Expense:
         
         return list(set(participants))  # Remove duplicates
     
-    def create_expense(self, description, amount, payer, participants, group_id=None, user_id=None):
+    def create_expense(self, description, amount, payer, participants, group_id=None, user_id=None, category='Others'):
         """Create expense with integer paisa storage"""
         import logging
         logger = logging.getLogger(__name__)
         
         logger.info(f'Creating expense: {description}, amount: {amount}, payer: {payer}')
+        
+        if category not in CATEGORIES:
+            category = 'Others'
         
         # Validate and convert amount to paisa
         amount_paisa = self._validate_amount(amount)
@@ -71,6 +76,7 @@ class Expense:
             'payer': payer.strip(),
             'participants': validated_participants,
             'participant_shares': participant_shares,  # Exact shares in paisa
+            'category': category,
             'date': datetime.utcnow(),
             'currency': 'INR'
         }
@@ -99,3 +105,43 @@ class Expense:
         return list(self.collection.find({
             'participants': participant_name
         }).sort('date', -1))
+    
+    def get_category_breakdown(self, user_id, start_date=None, end_date=None):
+        """Get expense breakdown by category"""
+        match_stage = {'user_id': user_id}
+        if start_date:
+            match_stage['date'] = {'$gte': start_date}
+        if end_date:
+            match_stage.setdefault('date', {})['$lte'] = end_date
+        
+        pipeline = [
+            {'$match': match_stage},
+            {'$group': {
+                '_id': '$category',
+                'total': {'$sum': '$amount'},
+                'count': {'$sum': 1}
+            }},
+            {'$sort': {'total': -1}}
+        ]
+        
+        return list(self.collection.aggregate(pipeline))
+    
+    def get_monthly_summary(self, user_id, months=6):
+        """Get monthly expense summary"""
+        from datetime import datetime, timedelta
+        start_date = datetime.utcnow() - timedelta(days=months*30)
+        
+        pipeline = [
+            {'$match': {'user_id': user_id, 'date': {'$gte': start_date}}},
+            {'$group': {
+                '_id': {
+                    'year': {'$year': '$date'},
+                    'month': {'$month': '$date'}
+                },
+                'total': {'$sum': '$amount'},
+                'count': {'$sum': 1}
+            }},
+            {'$sort': {'_id.year': 1, '_id.month': 1}}
+        ]
+        
+        return list(self.collection.aggregate(pipeline))

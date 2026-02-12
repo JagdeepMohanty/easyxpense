@@ -34,22 +34,20 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 
   return (
     <div className="flex items-center justify-center gap-2 mt-6">
-      {/* Previous Button */}
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        className="px-4 py-2 bg-darkcard border border-darkborder rounded-xl text-sm font-medium text-darktext hover:bg-darksecondary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
       >
         ← Previous
       </button>
 
-      {/* Page Numbers */}
       <div className="hidden sm:flex items-center gap-2">
         {getPageNumbers().map((page, index) => (
           page === '...' ? (
             <span
               key={`ellipsis-${index}`}
-              className="px-3 py-2 text-gray-500 dark:text-gray-400"
+              className="px-3 py-2 text-darkmuted"
             >
               ...
             </span>
@@ -59,8 +57,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
               onClick={() => onPageChange(page)}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 currentPage === page
-                  ? 'bg-primary-600 text-white shadow-soft'
-                  : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  ? 'bg-gradient-to-r from-accent-start to-accent-end text-white shadow-glow'
+                  : 'bg-darkcard border border-darkborder text-darktext hover:bg-darksecondary'
               }`}
             >
               {page}
@@ -69,16 +67,14 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         ))}
       </div>
 
-      {/* Mobile Page Info */}
-      <div className="sm:hidden px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300">
+      <div className="sm:hidden px-4 py-2 bg-darkcard border border-darkborder rounded-xl text-sm font-medium text-darktext">
         {currentPage} / {totalPages}
       </div>
 
-      {/* Next Button */}
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        className="px-4 py-2 bg-darkcard border border-darkborder rounded-xl text-sm font-medium text-darktext hover:bg-darksecondary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
       >
         Next →
       </button>

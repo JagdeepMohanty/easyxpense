@@ -13,16 +13,16 @@ import {
 } from 'recharts';
 
 const Charts = ({ monthlyData = [], categoryData = [] }) => {
-  const COLORS = ['#0284c7', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+  const COLORS = ['#7C5CFF', '#8B5CF6', '#A855F7', '#10b981', '#f59e0b', '#ef4444'];
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-soft-lg p-3">
-          <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+        <div className="bg-darkcard border border-darkborder rounded-xl shadow-soft-lg p-3">
+          <p className="text-sm font-medium text-darktext mb-1">
             {label}
           </p>
-          <p className="text-sm text-primary-600 dark:text-primary-400 font-semibold">
+          <p className="text-sm text-accent-mid font-semibold">
             ₹{payload[0].value.toLocaleString()}
           </p>
         </div>
@@ -34,11 +34,11 @@ const Charts = ({ monthlyData = [], categoryData = [] }) => {
   const CustomPieTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-soft-lg p-3">
-          <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+        <div className="bg-darkcard border border-darkborder rounded-xl shadow-soft-lg p-3">
+          <p className="text-sm font-medium text-darktext mb-1">
             {payload[0].name}
           </p>
-          <p className="text-sm text-primary-600 dark:text-primary-400 font-semibold">
+          <p className="text-sm text-accent-mid font-semibold">
             ₹{payload[0].value.toLocaleString()}
           </p>
         </div>
@@ -49,32 +49,30 @@ const Charts = ({ monthlyData = [], categoryData = [] }) => {
 
   return (
     <div className="grid lg:grid-cols-2 gap-6">
-      {/* Monthly Spending Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+      <div className="bg-darkcard rounded-xl shadow-soft border border-darkborder p-6">
+        <h3 className="text-lg font-semibold text-darktext mb-6">
           Monthly Spending
         </h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={monthlyData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#23283B" />
             <XAxis
               dataKey="month"
-              tick={{ fill: '#6b7280', fontSize: 12 }}
-              stroke="#e5e7eb"
+              tick={{ fill: '#9CA3AF', fontSize: 12 }}
+              stroke="#23283B"
             />
             <YAxis
-              tick={{ fill: '#6b7280', fontSize: 12 }}
-              stroke="#e5e7eb"
+              tick={{ fill: '#9CA3AF', fontSize: 12 }}
+              stroke="#23283B"
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(2, 132, 199, 0.1)' }} />
-            <Bar dataKey="amount" fill="#0284c7" radius={[8, 8, 0, 0]} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(124, 92, 255, 0.1)' }} />
+            <Bar dataKey="amount" fill="#7C5CFF" radius={[8, 8, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Category Distribution Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+      <div className="bg-darkcard rounded-xl shadow-soft border border-darkborder p-6">
+        <h3 className="text-lg font-semibold text-darktext mb-6">
           Category Distribution
         </h3>
         <ResponsiveContainer width="100%" height={300}>

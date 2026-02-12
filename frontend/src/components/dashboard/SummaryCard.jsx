@@ -38,7 +38,7 @@ const SummaryCard = ({ title, value, icon, trend, trendValue, color = 'primary' 
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft hover:shadow-soft-lg transition-all p-6 border border-gray-200 dark:border-gray-700">
+    <div className="bg-darkcard rounded-xl shadow-soft hover:shadow-soft-lg transition-all p-6 border border-darkborder">
       <div className="flex items-start justify-between mb-4">
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${colorClasses[color]}`}>
           {icon}
@@ -53,11 +53,11 @@ const SummaryCard = ({ title, value, icon, trend, trendValue, color = 'primary' 
         )}
       </div>
       
-      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+      <h3 className="text-sm font-medium text-darkmuted mb-2">
         {title}
       </h3>
       
-      <p className="text-3xl font-bold text-gray-900 dark:text-white">
+      <p className="text-3xl font-bold text-darktext">
         {typeof value === 'number' ? displayValue.toLocaleString() : value}
       </p>
     </div>

@@ -104,6 +104,8 @@ def create_app(config_name=None):
         from app.routes.debts import debts_bp
         from app.routes.health import health_bp
         from app.routes.groups import groups_bp
+        from app.routes.group_transactions import group_transactions_bp
+        from app.routes.analytics import analytics_bp
         
         app.register_blueprint(auth_bp, url_prefix='/api')
         app.register_blueprint(friends_bp, url_prefix='/api')
@@ -112,6 +114,8 @@ def create_app(config_name=None):
         app.register_blueprint(debts_bp, url_prefix='/api')
         app.register_blueprint(health_bp, url_prefix='/api')
         app.register_blueprint(groups_bp, url_prefix='/api')
+        app.register_blueprint(group_transactions_bp, url_prefix='/api')
+        app.register_blueprint(analytics_bp, url_prefix='/api')
         
         app.logger.info('All blueprints registered successfully')
     except Exception as e:

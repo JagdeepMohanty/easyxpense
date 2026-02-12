@@ -18,7 +18,7 @@ const ExpenseTable = ({ expenses = [], onSearch, onFilter }) => {
 
   if (!expenses.length) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-200 dark:border-gray-700">
+      <div className="bg-darkcard rounded-xl shadow-soft border border-darkborder">
         <EmptyState
           icon="📊"
           title="No expenses yet"
@@ -31,29 +31,26 @@ const ExpenseTable = ({ expenses = [], onSearch, onFilter }) => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-200 dark:border-gray-700 overflow-hidden">
-      {/* Header with Search and Filter */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+    <div className="bg-darkcard rounded-xl shadow-soft border border-darkborder overflow-hidden">
+      <div className="p-6 border-b border-darkborder">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-darktext">
             Recent Expenses
           </h2>
           
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            {/* Search */}
             <input
               type="text"
               placeholder="Search expenses..."
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
-              className="px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-sm"
+              className="px-4 py-2 bg-darksecondary border border-darkborder rounded-xl focus:ring-2 focus:ring-accent-mid focus:border-transparent outline-none transition-all text-sm text-darktext"
             />
             
-            {/* Filter */}
             <select
               value={filterType}
               onChange={(e) => handleFilter(e.target.value)}
-              className="px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-sm"
+              className="px-4 py-2 bg-darksecondary border border-darkborder rounded-xl focus:ring-2 focus:ring-accent-mid focus:border-transparent outline-none transition-all text-sm text-darktext"
             >
               <option value="all">All Types</option>
               <option value="paid">Paid</option>
@@ -63,38 +60,37 @@ const ExpenseTable = ({ expenses = [], onSearch, onFilter }) => {
         </div>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50 dark:bg-gray-700/50">
+          <thead className="bg-darksecondary">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-semibold text-darkmuted uppercase tracking-wider">
                 Description
               </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-semibold text-darkmuted uppercase tracking-wider">
                 Date
               </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-semibold text-darkmuted uppercase tracking-wider">
                 Friends
               </th>
-              <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-semibold text-darkmuted uppercase tracking-wider">
                 Amount
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody className="divide-y divide-darkborder">
             {expenses.map((expense, index) => (
               <tr
                 key={expense._id || index}
-                className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                className="hover:bg-darksecondary transition-colors"
               >
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">
+                  <div className="text-sm font-medium text-darktext">
                     {expense.description}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-sm text-darkmuted">
                     {new Date(expense.date).toLocaleDateString('en-IN', {
                       day: 'numeric',
                       month: 'short',
@@ -103,12 +99,12 @@ const ExpenseTable = ({ expenses = [], onSearch, onFilter }) => {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-sm text-darkmuted">
                     {expense.friends?.length || 0} friends
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right">
-                  <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                  <div className="text-sm font-semibold text-darktext">
                     {formatCurrency(expense.amount)}
                   </div>
                 </td>

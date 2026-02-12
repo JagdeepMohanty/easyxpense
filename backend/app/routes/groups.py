@@ -16,6 +16,7 @@ def create_group():
         return jsonify({'success': False, 'error': 'Request body is required'}), 400
     
     name = data.get('name', '').strip()
+    members = data.get('members', [])
     
     if not name:
         return jsonify({'success': False, 'error': 'Group name is required'}), 400
@@ -25,7 +26,7 @@ def create_group():
             return jsonify({'error': 'Database not available'}), 503
         
         group_model = Group(current_app.db)
-        group_id, group_code = group_model.create_group(name, user['_id'])
+        group_id, group_code = group_model.create_group(name, user['_id'], members)
         
         return jsonify({
             'success': True,
@@ -33,7 +34,8 @@ def create_group():
             'data': {
                 '_id': str(group_id),
                 'name': name,
-                'group_code': group_code
+                'group_code': group_code,
+                'members': members
             }
         }), 201
         
@@ -74,7 +76,7 @@ def get_groups():
                 group['_id'] = str(group['_id'])
                 group['created_at'] = group['created_at'].isoformat()
             
-            return jsonify(groups), 200
+            return jsonify({'groups': groups}), 200
         
     except Exception as e:
         current_app.logger.error(f'Get groups error: {e}')
@@ -101,6 +103,7 @@ def delete_group(group_id):
         current_app.db.expenses.delete_many({'group_id': group_id, 'user_id': user['_id']})
         current_app.db.friends.delete_many({'group_id': group_id, 'user_id': user['_id']})
         current_app.db.settlements.delete_many({'group_id': group_id, 'user_id': user['_id']})
+        current_app.db.group_transactions.delete_many({'group_id': ObjectId(group_id), 'user_id': user['_id']})
         
         return jsonify({
             'success': True,
@@ -110,3 +113,28 @@ def delete_group(group_id):
     except Exception as e:
         current_app.logger.error(f'Delete group error: {e}')
         return jsonify({'error': 'Failed to delete group'}), 500
+
+
+@groups_bp.route('/groups/<group_id>', methods=['GET'])
+@token_required
+def get_group(group_id):
+    """Get single group by ID"""
+    user = request.current_user
+    try:
+        if current_app.db is None:
+            return jsonify({'error': 'Database not available'}), 503
+        
+        group_model = Group(current_app.db)
+        group = group_model.get_group_by_id(group_id)
+        
+        if not group or str(group['user_id']) != str(user['_id']):
+            return jsonify({'error': 'Group not found'}), 404
+        
+        group['_id'] = str(group['_id'])
+        group['created_at'] = group['created_at'].isoformat()
+        
+        return jsonify({'group': group}), 200
+        
+    except Exception as e:
+        current_app.logger.error(f'Get group error: {e}')
+        return jsonify({'error': 'Failed to fetch group'}), 500

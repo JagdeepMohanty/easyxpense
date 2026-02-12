@@ -31,19 +31,19 @@ const Navbar = ({ onMenuClick }) => {
   if (!user) return null;
 
   return (
-    <nav className="sticky top-0 z-30 bg-white dark:bg-[#1E293B] border-b border-gray-200 dark:border-gray-700">
+    <nav className="sticky top-0 z-30 bg-darkcard border-b border-darkborder">
       <div className="flex items-center justify-between px-6 py-4">
         {/* Left: Menu + Title */}
         <div className="flex items-center gap-4">
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            className="lg:hidden p-2 hover:bg-darksecondary rounded-lg text-darktext"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-xl font-semibold text-darktext">
             {getPageTitle()}
           </h2>
         </div>
@@ -53,7 +53,7 @@ const Navbar = ({ onMenuClick }) => {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all"
+            className="p-2 hover:bg-darksecondary rounded-lg transition-all text-darktext"
             aria-label="Toggle theme"
           >
             {isDark ? '☀️' : '🌙'}
@@ -63,12 +63,12 @@ const Navbar = ({ onMenuClick }) => {
           <div className="relative">
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all"
+              className="flex items-center gap-3 px-4 py-2 hover:bg-darksecondary rounded-xl transition-all"
             >
-              <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white font-semibold">
+              <div className="w-8 h-8 bg-gradient-to-br from-accent-start to-accent-end rounded-full flex items-center justify-center text-white font-semibold">
                 {user.name?.[0]?.toUpperCase() || 'U'}
               </div>
-              <span className="hidden md:block font-medium text-gray-900 dark:text-white">
+              <span className="hidden md:block font-medium text-darktext">
                 {user.name}
               </span>
               <svg
@@ -88,14 +88,14 @@ const Navbar = ({ onMenuClick }) => {
                   className="fixed inset-0 z-10"
                   onClick={() => setShowDropdown(false)}
                 />
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1E293B] rounded-xl shadow-soft-lg border border-gray-200 dark:border-gray-700 py-2 z-20">
-                  <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{user.email || user.phone}</p>
+                <div className="absolute right-0 mt-2 w-48 bg-darkcard rounded-xl shadow-soft-lg border border-darkborder py-2 z-20">
+                  <div className="px-4 py-2 border-b border-darkborder">
+                    <p className="text-sm font-medium text-darktext">{user.name}</p>
+                    <p className="text-xs text-darkmuted">{user.email || user.phone}</p>
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
+                    className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-darksecondary transition-all"
                   >
                     🚪 Logout
                   </button>

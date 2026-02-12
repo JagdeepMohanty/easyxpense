@@ -22,6 +22,7 @@ def create_expense():
     payer = sanitize_string(data.get('payer', ''), max_length=100)
     participants = sanitize_list(data.get('participants', []), max_items=50)
     group_id = sanitize_string(data.get('group_id', ''), max_length=50) if data.get('group_id') else None
+    category = sanitize_string(data.get('category', 'Others'), max_length=50)
     
     # Validation
     if not description:
@@ -51,7 +52,8 @@ def create_expense():
             payer=payer,
             participants=participants,
             group_id=group_id,
-            user_id=user['_id']
+            user_id=user['_id'],
+            category=category
         )
         
         current_app.logger.info(f'Expense created successfully with ID: {expense_id}')
@@ -64,7 +66,8 @@ def create_expense():
                 'description': description,
                 'amount': amount,
                 'payer': payer,
-                'participants': participants
+                'participants': participants,
+                'category': category
             }
         }), 201
         

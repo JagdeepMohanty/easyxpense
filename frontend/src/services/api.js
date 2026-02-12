@@ -195,9 +195,28 @@ export const friendsAPI = {
 
 export const groupsAPI = {
   getAll: () => retryRequest(() => api.get('/api/groups')),
+  getById: (groupId) => retryRequest(() => api.get(`/api/groups/${groupId}`)),
   create: (groupData) => api.post('/api/groups', groupData),
   findByCode: (code) => api.get(`/api/groups?code=${code}`),
   delete: (groupId) => api.delete(`/api/groups/${groupId}`),
+  addMember: (groupId, memberName) => api.post(`/api/groups/${groupId}/members`, { member_name: memberName }),
+  removeMember: (groupId, memberName) => api.delete(`/api/groups/${groupId}/members/${memberName}`),
+};
+
+export const groupTransactionsAPI = {
+  create: (groupId, transactionData) => api.post(`/api/groups/${groupId}/transactions`, transactionData),
+  getAll: (groupId, page = 1, limit = 20) => {
+    return retryRequest(() => api.get(`/api/groups/${groupId}/transactions?page=${page}&limit=${limit}`));
+  },
+  getBalances: (groupId) => retryRequest(() => api.get(`/api/groups/${groupId}/balances`)),
+};
+
+export const analyticsAPI = {
+  getMonthlySummary: (months = 6) => retryRequest(() => api.get(`/api/expenses/monthly-summary?months=${months}`)),
+  getCategoryBreakdown: () => retryRequest(() => api.get('/api/expenses/category-breakdown')),
+  getGroupSummary: (groupId) => retryRequest(() => api.get(`/api/groups/${groupId}/summary`)),
+  getGroupMemberBalances: (groupId) => retryRequest(() => api.get(`/api/groups/${groupId}/member-balances`)),
+  getGroupChartData: (groupId) => retryRequest(() => api.get(`/api/groups/${groupId}/chart-data`)),
 };
 
 export const healthAPI = {

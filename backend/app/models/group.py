@@ -18,7 +18,7 @@ class Group:
             if not self.collection.find_one({'group_code': code}):
                 return code
     
-    def create_group(self, name, user_id):
+    def create_group(self, name, user_id, members=None):
         """Create new group"""
         if not name or len(name.strip()) == 0:
             raise ValueError("Group name is required")
@@ -32,6 +32,7 @@ class Group:
             'user_id': user_id,
             'name': name.strip(),
             'group_code': group_code,
+            'members': members or [],
             'created_at': datetime.utcnow()
         }
         
@@ -54,3 +55,19 @@ class Group:
         """Delete group (only if owned by user)"""
         result = self.collection.delete_one({'_id': ObjectId(group_id), 'user_id': user_id})
         return result.deleted_count > 0
+    
+    def add_member(self, group_id, member_name, user_id):
+        """Add member to group"""
+        result = self.collection.update_one(
+            {'_id': ObjectId(group_id), 'user_id': user_id},
+            {'$addToSet': {'members': member_name}}
+        )
+        return result.modified_count > 0
+    
+    def remove_member(self, group_id, member_name, user_id):
+        """Remove member from group"""
+        result = self.collection.update_one(
+            {'_id': ObjectId(group_id), 'user_id': user_id},
+            {'$pull': {'members': member_name}}
+        )
+        return result.modified_count > 0

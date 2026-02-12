@@ -14,6 +14,8 @@ const AddExpense = lazy(() => import('./pages/AddExpense'));
 const Friends = lazy(() => import('./pages/Friends'));
 const DebtTracker = lazy(() => import('./pages/DebtTracker'));
 const PaymentHistory = lazy(() => import('./pages/PaymentHistory'));
+const Groups = lazy(() => import('./pages/Groups'));
+const GroupDetails = lazy(() => import('./pages/GroupDetails'));
 
 function App() {
   return (
@@ -79,6 +81,30 @@ function App() {
                   <MainLayout>
                     <Suspense fallback={<LoadingSpinner />}>
                       <PaymentHistory />
+                    </Suspense>
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groups"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Groups />
+                    </Suspense>
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groups/:groupId"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <GroupDetails />
                     </Suspense>
                   </MainLayout>
                 </ProtectedRoute>
