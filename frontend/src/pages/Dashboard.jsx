@@ -1,200 +1,170 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { analyticsAPI, debtsAPI } from '../services/api';
+import { analyticsAPI, expensesAPI } from '../services/api';
 import { formatCurrency } from '../utils/currency';
-import SummaryCard from '../components/dashboard/SummaryCard';
-import ExpenseTable from '../components/dashboard/ExpenseTable';
-import Charts from '../components/dashboard/Charts';
-import ErrorState from '../components/ui/ErrorState';
-import { SkeletonCard, SkeletonChart } from '../components/ui/Skeleton';
-import GradientButton from '../components/ui/GradientButton';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+
+const CHART_COLORS = ['#7B5CFF', '#C4B5FD', '#FDBA74'];
 
 const Dashboard = () => {
-  const [debts, setDebts] = useState([]);
-  const [balances, setBalances] = useState({});
   const [monthlyData, setMonthlyData] = useState([]);
   const [categoryData, setCategoryData] = useState([]);
+  const [expenses, setExpenses] = useState([]);
+  const [totalExpense, setTotalExpense] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  const fetchDashboardData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError('');
-      
-      const [debtsRes, monthlyRes, categoryRes] = await Promise.all([
-        debtsAPI.getAll(),
-        analyticsAPI.getMonthlySummary(6),
-        analyticsAPI.getCategoryBreakdown()
-      ]);
-      
-      const debtsData = debtsRes.data.debts || debtsRes.data;
-      const balancesData = debtsRes.data.balances || {};
-      
-      setDebts(Array.isArray(debtsData) ? debtsData : []);
-      setBalances(balancesData);
-      
-      setMonthlyData(monthlyRes.data.data || []);
-      setCategoryData(categoryRes.data.data || []);
-    } catch (err) {
-      setError(err.message || 'Failed to load dashboard data');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+    const fetchData = async () => {
+      try {
+        const [monthlyRes, categoryRes, expensesRes] = await Promise.all([
+          analyticsAPI.getMonthlySummary(6),
+          analyticsAPI.getCategoryBreakdown(),
+          expensesAPI.getAll(null, 1, 10)
+        ]);
 
-  // Calculate summary statistics
-  const totalExpenses = monthlyData.reduce((sum, m) => sum + (m.amount || 0), 0);
-  const youOwe = Object.values(balances).reduce((sum, balance) => 
-    balance < 0 ? sum + Math.abs(balance) : sum, 0
-  );
-  const youAreOwed = Object.values(balances).reduce((sum, balance) => 
-    balance > 0 ? sum + balance : sum, 0
-  );
-  const netBalance = youAreOwed - youOwe;
+        setMonthlyData(monthlyRes.data.data || []);
+        setCategoryData(categoryRes.data.data || []);
+        setExpenses(expensesRes.data.data || []);
+        
+        const total = (monthlyRes.data.data || []).reduce((sum, m) => sum + (m.amount || 0), 0);
+        setTotalExpense(total);
+      } catch (err) {
+        // Handle error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   if (loading) {
     return (
-      <div className="space-y-6 animate-fade-in">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => <SkeletonCard key={i} />)}
-        </div>
-        <div className="grid lg:grid-cols-2 gap-6">
-          <SkeletonChart />
-          <SkeletonChart />
-        </div>
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-primarywhite">Loading...</div>
       </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <ErrorState
-        title="Error loading dashboard"
-        message={error}
-        onRetry={fetchDashboardData}
-      />
     );
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-gap">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-darktext">Dashboard</h1>
-          <p className="text-darkmuted mt-1">Your expense overview at a glance</p>
+          <h1 className="text-4xl font-bold text-primarywhite">Dashboard</h1>
+          <p className="text-muted mt-2">Your financial overview</p>
         </div>
-        <GradientButton to="/add-expense">
-          <span>➕</span>
-          Add Expense
-        </GradientButton>
+        <Link
+          to="/add-expense"
+          className="px-6 py-3 bg-cyber-gradient text-primarywhite rounded-2xl font-semibold hover:shadow-glow hover:scale-105 transition-all duration-200"
+        >
+          + Add Expense
+        </Link>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-slide-up">
-        <div className="hover-lift">
-          <SummaryCard
-            title="Net Balance"
-            value={formatCurrency(netBalance)}
-            icon="💰"
-            color="primary"
-            trend={netBalance > 0 ? 'up' : netBalance < 0 ? 'down' : 'neutral'}
-            trendValue={netBalance > 0 ? 'Positive' : netBalance < 0 ? 'Negative' : 'Neutral'}
-          />
-        </div>
-        <div className="hover-lift">
-          <SummaryCard
-            title="You Owe"
-            value={formatCurrency(youOwe)}
-            icon="💸"
-            color="orange"
-            trend={youOwe > 0 ? 'down' : 'neutral'}
-            trendValue={youOwe > 0 ? 'Outstanding' : 'Clear'}
-          />
-        </div>
-        <div className="hover-lift">
-          <SummaryCard
-            title="You Are Owed"
-            value={formatCurrency(youAreOwed)}
-            icon="💵"
-            color="green"
-            trend={youAreOwed > 0 ? 'up' : 'neutral'}
-            trendValue={youAreOwed > 0 ? 'To collect' : 'None'}
-          />
-        </div>
-        <div className="hover-lift">
-          <SummaryCard
-            title="Total Expenses"
-            value={formatCurrency(totalExpenses)}
-            icon="📊"
-            color="purple"
-          />
-        </div>
-      </div>
-
-      {/* Charts */}
-      <Charts monthlyData={monthlyData} categoryData={categoryData} />
-
-      {/* Debts Section */}
-      {debts.length > 0 && (
-        <div className="bg-darkcard rounded-xl shadow-soft border border-darkborder p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-lg font-semibold text-darktext">Pending Settlements</h2>
-              <p className="text-sm text-darkmuted mt-1">Clear these to balance your account</p>
-            </div>
-            <Link
-              to="/debts"
-              className="text-accent-mid hover:underline text-sm font-medium"
-            >
-              View All →
-            </Link>
+      <div className="grid lg:grid-cols-4 gap-gap">
+        <div className="lg:col-span-3 space-y-gap">
+          <div className="bg-offblack rounded-main p-6 shadow-cyber border border-white/5">
+            <h2 className="text-xl font-bold text-primarywhite mb-6">Monthly Spending Trend</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="month" stroke="#A1A1A1" />
+                <YAxis stroke="#A1A1A1" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#0D0D0D',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    borderRadius: '12px',
+                    color: '#FFFFFF'
+                  }}
+                />
+                <Bar dataKey="amount" fill="#7B5CFF" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-          <div className="space-y-3">
-            {debts.slice(0, 5).map((debt, index) => {
-              const userOwes = debt.debtor !== debt.creditor;
-              return (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-4 bg-darksecondary rounded-xl hover:bg-darkbg transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${
-                      userOwes
-                        ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600'
-                        : 'bg-green-50 dark:bg-green-900/20 text-green-600'
-                    }`}>
-                      {userOwes ? '↑' : '↓'}
+
+          <div className="bg-offblack rounded-main p-6 shadow-cyber border border-white/5">
+            <h2 className="text-xl font-bold text-primarywhite mb-6">Recent Transactions</h2>
+            <div className="space-y-3">
+              {expenses.slice(0, 5).map((expense, idx) => (
+                <div key={idx} className="flex items-center justify-between p-4 bg-pureblack rounded-2xl border border-white/5 hover:border-cyberpurple/30 transition-all">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-cyber-gradient flex items-center justify-center">
+                      <span className="text-primarywhite text-xl">💰</span>
                     </div>
                     <div>
-                      <p className="font-medium text-darktext">
-                        {userOwes ? `You owe ${debt.creditor}` : `${debt.debtor} owes you`}
-                      </p>
-                      <p className="text-sm text-darkmuted">
-                        {formatCurrency(debt.amount)}
-                      </p>
+                      <p className="text-primarywhite font-semibold">{expense.description}</p>
+                      <p className="text-muted text-sm">{expense.payer}</p>
                     </div>
                   </div>
-                  <Link
-                    to="/debts"
-                    className="px-4 py-2 bg-darkcard hover:bg-darksecondary border border-darkborder rounded-xl text-sm font-medium transition-all text-darktext"
-                  >
-                    Settle
-                  </Link>
+                  <span className="text-primarywhite font-bold text-lg">{formatCurrency(expense.amount)}</span>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Expense Table */}
-      <ExpenseTable expenses={[]} />
+        <div className="space-y-gap">
+          <div className="bg-card-gradient rounded-main p-6 shadow-cyber shadow-glow">
+            <h3 className="text-sm text-lavender mb-2">Total Monthly Expense</h3>
+            <p className="text-4xl font-bold text-primarywhite">{formatCurrency(totalExpense)}</p>
+          </div>
+
+          <div className="bg-offblack rounded-main p-6 shadow-cyber border border-white/5">
+            <h2 className="text-lg font-bold text-primarywhite mb-4">Category Distribution</h2>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={categoryData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {categoryData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#0D0D0D',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    borderRadius: '12px',
+                    color: '#FFFFFF'
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="mt-4 space-y-2">
+              {categoryData.slice(0, 3).map((cat, idx) => (
+                <div key={idx} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: CHART_COLORS[idx % CHART_COLORS.length] }}
+                    />
+                    <span className="text-muted text-sm">{cat.name}</span>
+                  </div>
+                  <span className="text-primarywhite text-sm font-semibold">{formatCurrency(cat.value)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-offblack rounded-main p-6 shadow-cyber border border-cyberpurple/30">
+            <h3 className="text-primarywhite font-bold mb-2">Track Group Expenses</h3>
+            <p className="text-muted text-sm mb-4">Split bills with friends easily</p>
+            <Link
+              to="/groups"
+              className="block w-full py-3 bg-cyber-gradient text-primarywhite rounded-xl text-center font-semibold hover:shadow-glow hover:scale-105 transition-all duration-200"
+            >
+              View Groups
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
