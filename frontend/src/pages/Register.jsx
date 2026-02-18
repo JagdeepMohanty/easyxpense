@@ -33,25 +33,25 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-6 animate-fade-in">
+    <div className="min-h-screen bg-background dark:bg-background-dark flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent mb-2">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
             EasyXpense
           </h1>
-          <p className="text-gray-600 dark:text-gray-300">Create your account</p>
+          <p className="text-textSecondary dark:text-textSecondary-dark">Create your account</p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft-lg p-8 animate-scale-in">
+        <div className="bg-card dark:bg-card-dark rounded-xl shadow-lg border border-primary/10 p-8">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm">
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-textPrimary dark:text-textPrimary-dark mb-2">
                 Name
               </label>
               <input
@@ -60,12 +60,12 @@ const Register = () => {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name"
                 required
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-white"
+                className="w-full px-4 py-3 bg-background dark:bg-background-dark border border-primary/20 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-textPrimary dark:text-textPrimary-dark placeholder-textSecondary dark:placeholder-textSecondary-dark"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-textPrimary dark:text-textPrimary-dark mb-2">
                 Email or Phone
               </label>
               <input
@@ -74,12 +74,12 @@ const Register = () => {
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="Enter email or phone number"
                 required
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-white"
+                className="w-full px-4 py-3 bg-background dark:bg-background-dark border border-primary/20 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-textPrimary dark:text-textPrimary-dark placeholder-textSecondary dark:placeholder-textSecondary-dark"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-textPrimary dark:text-textPrimary-dark mb-2">
                 Password
               </label>
               <input
@@ -89,22 +89,29 @@ const Register = () => {
                 placeholder="Enter password (min 6 characters)"
                 required
                 minLength={6}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-white"
+                className="w-full px-4 py-3 bg-background dark:bg-background-dark border border-primary/20 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-textPrimary dark:text-textPrimary-dark placeholder-textSecondary dark:placeholder-textSecondary-dark"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold rounded-xl transition-all shadow-soft hover:-translate-y-0.5"
+              className="w-full py-3 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all shadow-md"
             >
-              {loading ? 'Registering...' : 'Register'}
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                  Registering...
+                </div>
+              ) : (
+                'Register'
+              )}
             </button>
           </form>
 
-          <p className="text-center mt-6 text-gray-600 dark:text-gray-400">
+          <p className="text-center mt-6 text-textSecondary dark:text-textSecondary-dark">
             Already have an account?{' '}
-            <Link to="/login" className="text-primary-600 dark:text-primary-400 font-medium hover:underline">
+            <Link to="/login" className="text-primary font-medium hover:text-accent transition-colors">
               Login
             </Link>
           </p>

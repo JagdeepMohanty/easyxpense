@@ -1,6 +1,1 @@
-from app import create_app
-import os
-
-# Production: Environment variables must be set on Render
-# No .env loading in production
-app = create_app('production')
+from app import create_app\nimport os\n\napp = create_app()\n\nif __name__ == \"__main__\":\n    port = int(os.environ.get('PORT', 5000))\n    app.run(host='0.0.0.0', port=port)

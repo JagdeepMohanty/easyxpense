@@ -1,14 +1,1 @@
-import React from 'react';
-
-const LoadingSpinner = ({ message = 'Loading...' }) => {
-  return (
-    <div className="flex items-center justify-center h-64 animate-fade-in">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
-        <p className="text-gray-600 dark:text-gray-400 font-medium">{message}</p>
-      </div>
-    </div>
-  );
-};
-
-export default LoadingSpinner;
+import React from 'react';\n\nconst LoadingSpinner = ({ size = 'md', className = '' }) => {\n  const sizeClasses = {\n    sm: 'w-4 h-4',\n    md: 'w-8 h-8',\n    lg: 'w-12 h-12'\n  };\n\n  return (\n    <div className={`flex items-center justify-center ${className}`}>\n      <div className={`${sizeClasses[size]} border-2 border-primary border-t-transparent rounded-full animate-spin`}></div>\n    </div>\n  );\n};\n\nexport default LoadingSpinner;

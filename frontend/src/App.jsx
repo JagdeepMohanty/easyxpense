@@ -3,19 +3,15 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import MainLayout from './components/layout/MainLayout';
+import MainLayout from './layouts/MainLayout';
 import LoadingSpinner from './components/ui/LoadingSpinner';
-import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const AddExpense = lazy(() => import('./pages/AddExpense'));
-const Friends = lazy(() => import('./pages/Friends'));
-const DebtTracker = lazy(() => import('./pages/DebtTracker'));
-const PaymentHistory = lazy(() => import('./pages/PaymentHistory'));
-const Groups = lazy(() => import('./pages/Groups'));
-const GroupDetails = lazy(() => import('./pages/GroupDetails'));
+const Dashboard = lazy(() => import('./pages/DashboardNew'));
+const Expenses = lazy(() => import('./pages/ExpensesNew'));
+const Friends = lazy(() => import('./pages/FriendsNew'));
+const Groups = lazy(() => import('./pages/GroupsNew'));
 
 function App() {
   return (
@@ -23,9 +19,9 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route
               path="/dashboard"
               element={
@@ -44,7 +40,7 @@ function App() {
                 <ProtectedRoute>
                   <MainLayout>
                     <Suspense fallback={<LoadingSpinner />}>
-                      <AddExpense />
+                      <Expenses />
                     </Suspense>
                   </MainLayout>
                 </ProtectedRoute>
@@ -63,30 +59,6 @@ function App() {
               }
             />
             <Route
-              path="/debts"
-              element={
-                <ProtectedRoute>
-                  <MainLayout>
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <DebtTracker />
-                    </Suspense>
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/history"
-              element={
-                <ProtectedRoute>
-                  <MainLayout>
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <PaymentHistory />
-                    </Suspense>
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="/groups"
               element={
                 <ProtectedRoute>
@@ -98,19 +70,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/groups/:groupId"
-              element={
-                <ProtectedRoute>
-                  <MainLayout>
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <GroupDetails />
-                    </Suspense>
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </Router>
       </AuthProvider>

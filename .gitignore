@@ -1,77 +1,26 @@
+# Dependencies
+node_modules/
+__pycache__/
+
 # Environment variables
 .env
 .env.local
-.env.production
-.env.development
-*.env
-!.env.example
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Frontend environment
-frontend/.env
-frontend/.env.local
-frontend/.env.production
-frontend/.env.development
-
-# Backend environment
-backend/.env
-backend/.env.local
-backend/.env.production
-backend/.env.development
-
-# Dependencies
-node_modules/
-frontend/node_modules/
-backend/venv/
-backend/env/
-backend/ENV/
-
-# Python
-backend/__pycache__/
-backend/*.pyc
-backend/*.pyo
-backend/*.pyd
-backend/.Python
-backend/build/
-backend/develop-eggs/
-backend/dist/
-backend/downloads/
-backend/eggs/
-backend/.eggs/
-backend/lib/
-backend/lib64/
-backend/parts/
-backend/sdist/
-backend/var/
-backend/wheels/
-backend/*.egg-info/
-backend/.installed.cfg
-backend/*.egg
-
-# Frontend build outputs
-frontend/dist/
-frontend/build/
-frontend/.vite/
-frontend/.next/
-frontend/out/
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-.DS_Store
-Thumbs.db
-*.sublime-project
-*.sublime-workspace
+# Build outputs
+dist/
+build/
+*.tgz
+*.tar.gz
 
 # Logs
 *.log
-logs/
-frontend/npm-debug.log*
-frontend/yarn-debug.log*
-frontend/yarn-error.log*
-frontend/lerna-debug.log*
-backend/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
 
 # Runtime data
 pids
@@ -87,6 +36,7 @@ coverage/
 .nyc_output
 
 # Dependency directories
+node_modules/
 jspm_packages/
 
 # Optional npm cache directory
@@ -114,9 +64,31 @@ jspm_packages/
 .cache
 .parcel-cache
 
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
 # Temporary folders
 tmp/
 temp/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
 # OS generated files
 .DS_Store
@@ -126,20 +98,3 @@ temp/
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Local development
-.local
-
-# Production files
-*.tgz
-*.tar.gz

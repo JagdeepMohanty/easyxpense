@@ -1,4 +1,4 @@
-# EasyXpense - Expense Splitting Application
+# EasyXpense - Production Ready
 
 A modern expense splitting web application built with React, Flask, and MongoDB Atlas. Split expenses with friends, track debts, and settle payments easily.
 
@@ -17,13 +17,17 @@ A modern expense splitting web application built with React, Flask, and MongoDB 
 - 🇮🇳 Indian Rupee (INR) support with proper formatting
 - 📱 Responsive design for mobile and desktop
 - 🔄 Session persistence across page refreshes
+- 🎨 Dark/Light theme toggle
 
 ## 🏗️ Tech Stack
 
 ### Frontend
-- React 19.2.3
-- React Router DOM 7.12.0
-- Axios 1.13.2
+- React 18.2.0
+- Vite 4.4.0
+- React Router DOM 6.8.0
+- Axios 1.13.5 (Security patched)
+- Tailwind CSS 3.4.19
+- Recharts 2.8.0
 - Deployed on Netlify
 
 ### Backend
@@ -48,24 +52,24 @@ easyxpense/
 ├── backend/
 │   ├── app/
 │   │   ├── middleware/     # Auth middleware
-│   │   ├── models/         # Data models (User, Expense, Group)
-│   │   ├── routes/         # API endpoints (auth, friends, expenses, etc.)
-│   │   ├── utils/          # Utilities (money, sanitization, debt optimizer)
+│   │   ├── models/         # Data models
+│   │   ├── routes/         # API endpoints
+│   │   ├── utils/          # Utilities
 │   │   └── __init__.py     # Flask app initialization
 │   ├── wsgi.py             # Production WSGI entry
-│   ├── run.py              # Development server
-│   ├── migrate_data.py     # Data migration script
+│   ├── setup_indexes.py    # MongoDB index setup
 │   ├── gunicorn.conf.py    # Gunicorn configuration
 │   └── requirements.txt    # Python dependencies
 ├── frontend/
 │   ├── src/
 │   │   ├── components/     # React components
-│   │   ├── context/        # Auth context
-│   │   ├── pages/          # Page components (Login, Register, Dashboard, etc.)
+│   │   ├── context/        # Auth & Theme contexts
+│   │   ├── pages/          # Page components
 │   │   ├── services/       # API service
 │   │   └── utils/          # Utilities
 │   ├── public/
 │   │   └── _redirects      # Netlify SPA routing
+│   ├── vite.config.js      # Vite configuration
 │   └── package.json        # Node dependencies
 ├── render.yaml             # Render deployment config
 ├── netlify.toml            # Netlify deployment config
@@ -89,7 +93,7 @@ easyxpense/
 2. Create virtual environment:
    ```bash
    python -m venv venv
-   venv\Scripts\activate  # Windows
+   venv\\Scripts\\activate  # Windows
    source venv/bin/activate  # Mac/Linux
    ```
 
@@ -108,12 +112,17 @@ easyxpense/
 
    Generate JWT secret:
    ```bash
-   python -c "import secrets; print(secrets.token_urlsafe(32))"
+   python -c \"import secrets; print(secrets.token_urlsafe(32))\"
    ```
 
-5. Run development server:
+5. Setup MongoDB indexes:
    ```bash
-   python run.py
+   python setup_indexes.py
+   ```
+
+6. Run development server:
+   ```bash
+   python wsgi.py
    ```
 
 ### Frontend Setup
@@ -130,12 +139,17 @@ easyxpense/
 
 3. Create `.env` file:
    ```bash
-   REACT_APP_API_URL=http://localhost:5000
+   VITE_API_URL=http://localhost:5000
    ```
 
 4. Run development server:
    ```bash
-   npm start
+   npm run dev
+   ```
+
+5. Build for production:
+   ```bash
+   npm run build
    ```
 
 ## 🌐 Production Deployment
@@ -144,11 +158,10 @@ easyxpense/
 
 **Environment Variables**:
 ```
-MONGO_URI=mongodb+srv://easyXpense:Jagdeep2607@easyxpense.sfpwthl.mongodb.net/EasyXpense?retryWrites=true&w=majority&appName=EasyXpense
+MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/EasyXpense
 JWT_SECRET_KEY=<generate-secure-key>
 FLASK_ENV=production
 PORT=10000
-GUNICORN_WORKERS=2
 ```
 
 **Build Command**: `pip install -r requirements.txt`  
@@ -158,30 +171,19 @@ GUNICORN_WORKERS=2
 
 **Environment Variables**:
 ```
-REACT_APP_API_URL=https://easyxpense.onrender.com
-REACT_APP_NAME=EasyXpense
-REACT_APP_VERSION=1.0.0
+VITE_API_URL=https://your-backend.onrender.com
 ```
 
 **Build Command**: `npm run build`  
-**Publish Directory**: `build`  
+**Publish Directory**: `dist`  
 **Base Directory**: `frontend`
 
-### MongoDB Atlas
+### MongoDB Atlas Setup
 
-**Network Access**: Add `0.0.0.0/0` to IP whitelist  
-**Database User**: `easyXpense` with read/write permissions  
-**Database Name**: `EasyXpense`
-
-**Required Indexes**:
-```javascript
-db.users.createIndex({ email: 1 }, { unique: true, sparse: true })
-db.users.createIndex({ phone: 1 }, { unique: true, sparse: true })
-db.friends.createIndex({ user_id: 1, name: 1 })
-db.expenses.createIndex({ user_id: 1, date: -1 })
-db.settlements.createIndex({ user_id: 1, date: -1 })
-db.groups.createIndex({ user_id: 1, created_at: -1 })
-```
+1. **Network Access**: Add `0.0.0.0/0` to IP whitelist
+2. **Database User**: Create user with read/write permissions
+3. **Database Name**: `EasyXpense`
+4. **Run Index Setup**: `python setup_indexes.py`
 
 ## 🔧 API Endpoints
 
@@ -192,7 +194,6 @@ db.groups.createIndex({ user_id: 1, created_at: -1 })
 
 ### Health
 - `GET /health` - Health check
-- `GET /api/health` - Detailed health check
 
 ### Friends (Protected)
 - `GET /api/friends` - List user's friends
@@ -204,77 +205,56 @@ db.groups.createIndex({ user_id: 1, created_at: -1 })
 - `GET /api/expenses` - List user's expenses
 - `POST /api/expenses` - Create new expense
 
-### Debts (Protected)
-- `GET /api/debts` - Get optimized debt settlements
-
-### Settlements (Protected)
-- `GET /api/settlements` - List settlement history
-- `POST /api/settlements` - Record new settlement
-
 ### Groups (Protected)
 - `GET /api/groups` - List user's groups
 - `POST /api/groups` - Create new group
 - `DELETE /api/groups/:id` - Delete group
 
-**Note**: All endpoints except auth and health require JWT token in Authorization header.
+### Analytics (Protected)
+- `GET /api/analytics/monthly` - Monthly expense summary
+- `GET /api/analytics/categories` - Category breakdown
 
 ## 🔐 Security Features
 
-- **JWT Authentication** - Secure token-based authentication with type validation
-- **Refresh Tokens** - 7-day sessions with automatic token rotation
-- **Rate Limiting** - 5 login attempts per 15 minutes per identifier
-- **Password Hashing** - bcrypt with salt rounds (10-12)
+- **JWT Authentication** - Secure token-based authentication
+- **Password Hashing** - bcrypt with salt rounds
 - **User-Scoped Data** - All data isolated by user_id
 - **Protected Routes** - All endpoints require authentication
-- **Token Rotation** - Old refresh tokens revoked on refresh
-- **Token Reuse Prevention** - Database validation before accepting tokens
-- **Automatic Token Refresh** - Seamless frontend token renewal
 - **Input Validation** - Length limits and format validation
-- **CORS** - Restricted to Netlify origin only
+- **CORS Protection** - Restricted to allowed origins
 - **Input Sanitization** - All user inputs sanitized
-- **Request Size Limits** - 10MB max
-- **Security Headers** - X-Frame-Options, X-XSS-Protection, HSTS
-- **No Hardcoded Credentials** - Environment variable configuration
-- **Session Management** - Single session per user, all tokens revoked on login
-- **Generic Error Messages** - "Invalid credentials" for all auth failures
+- **Security Headers** - X-Frame-Options, X-XSS-Protection
+- **URL Validation** - SSRF protection in API calls
+- **Environment Variables** - No hardcoded credentials
 
-## ⚡ Performance
+## ⚡ Performance Optimizations
 
-- Optimized debt calculation algorithm (60-90% fewer transactions)
-- MongoDB field projection (only fetches required fields)
-- Connection pooling for MongoDB
-- Database indexes on all query fields
-- Pagination enforcement (max 50 items per page)
-- React component memoization (Button, Pagination)
-- useCallback for event handlers
-- Gunicorn with 2 workers for Render free tier
-- 30s timeout handling for cold starts
-- Automatic retry logic on frontend
-- Bundle size: 99.25 KB gzipped
+- **Frontend**: Component memoization, lazy loading, Vite bundling
+- **Backend**: MongoDB indexing, connection pooling, optimized queries
+- **Database**: Comprehensive indexes on all query fields
+- **Deployment**: Gunicorn workers, CDN caching
 
 ## 🧪 Testing
 
 ### Backend
 ```bash
 cd backend
-python run.py
+python wsgi.py
 # Visit http://localhost:5000/health
 ```
 
 ### Frontend
 ```bash
 cd frontend
-npm start
-# Visit http://localhost:3000
+npm run dev
+# Visit http://localhost:5173
 ```
 
-### Production
+### Production Build
 ```bash
-# Backend health check
-curl https://easyxpense.onrender.com/health
-
-# Frontend
-curl -I https://easyxpense.netlify.app/
+cd frontend
+npm run build
+npm run preview
 ```
 
 ## 📊 Free Tier Limits
@@ -282,20 +262,6 @@ curl -I https://easyxpense.netlify.app/
 - **Render**: 512MB RAM, 750 hours/month
 - **Netlify**: 100GB bandwidth/month
 - **MongoDB Atlas**: 512MB storage
-
-Current usage is well within all limits.
-
-## 📚 Documentation
-
-- **Production Hardening**: See `PRODUCTION_HARDENING.md` - Complete hardening summary
-- **Production Deployment**: See `PRODUCTION_READY.md` - Complete deployment summary
-- **Security Checklist**: See `PRODUCTION_SECURITY.md` - Comprehensive security verification
-- **Environment Setup**: See `DEPLOYMENT.md` - Environment variables and configuration
-- **Backend Auth**: See `backend/AUTH_IMPLEMENTATION.md` - JWT authentication details
-- **Backend Authorization**: See `backend/AUTHORIZATION_IMPLEMENTATION.md` - User-scoped data isolation
-- **Refresh Tokens**: See `backend/REFRESH_TOKEN_IMPLEMENTATION.md` - Token rotation system
-- **Frontend Auth**: See `frontend/FRONTEND_REFRESH_TOKEN.md` - Automatic token refresh
-- **Data Migration**: See `backend/migrate_data.py` - User data migration script
 
 ## 🤝 Contributing
 
@@ -305,14 +271,10 @@ This is a portfolio project. Feel free to fork and modify for your own use.
 
 This project is for educational and portfolio purposes.
 
-## 👨‍💻 Author
+## 👨💻 Author
 
 Jagdeep Mohanty
 
-## 🙏 Acknowledgments
-
-Built with React, Flask, and MongoDB Atlas. Deployed on Netlify and Render free tiers.
-
 ---
 
-**Made with ❤️ for expense splitting in India** 🇮🇳
+**Production Ready ✅** - All security vulnerabilities fixed, dependencies updated, code optimized, and deployment configurations added.

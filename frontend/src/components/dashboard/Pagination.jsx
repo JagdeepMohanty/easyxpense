@@ -37,7 +37,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="px-4 py-2 bg-darkcard border border-darkborder rounded-xl text-sm font-medium text-darktext hover:bg-darksecondary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        className="px-4 py-2 bg-[#0F172A] border border-emerald-500/20 rounded-lg text-sm font-medium text-textPrimary hover:bg-emerald-500/5 hover:border-emerald-400/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
       >
         ← Previous
       </button>
@@ -47,7 +47,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           page === '...' ? (
             <span
               key={`ellipsis-${index}`}
-              className="px-3 py-2 text-darkmuted"
+              className="px-3 py-2 text-textSecondary"
             >
               ...
             </span>
@@ -55,10 +55,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
             <button
               key={page}
               onClick={() => onPageChange(page)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 currentPage === page
-                  ? 'bg-gradient-to-r from-accent-start to-accent-end text-white shadow-glow'
-                  : 'bg-darkcard border border-darkborder text-darktext hover:bg-darksecondary'
+                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 text-black shadow-emerald-500/30'
+                  : 'bg-[#0F172A] border border-emerald-500/20 text-textPrimary hover:bg-emerald-500/5 hover:border-emerald-400/40'
               }`}
             >
               {page}
@@ -67,14 +67,14 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         ))}
       </div>
 
-      <div className="sm:hidden px-4 py-2 bg-darkcard border border-darkborder rounded-xl text-sm font-medium text-darktext">
+      <div className="sm:hidden px-4 py-2 bg-[#0F172A] border border-emerald-500/20 rounded-lg text-sm font-medium text-textPrimary">
         {currentPage} / {totalPages}
       </div>
 
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="px-4 py-2 bg-darkcard border border-darkborder rounded-xl text-sm font-medium text-darktext hover:bg-darksecondary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        className="px-4 py-2 bg-[#0F172A] border border-emerald-500/20 rounded-lg text-sm font-medium text-textPrimary hover:bg-emerald-500/5 hover:border-emerald-400/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
       >
         Next →
       </button>

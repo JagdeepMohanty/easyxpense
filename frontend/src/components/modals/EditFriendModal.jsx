@@ -2,14 +2,12 @@ import React, { useState } from 'react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 
-const EditFriendModal = ({ isOpen, onClose, onSave, friend, loading = false }) => {
+const EditFriendModal = ({ friend, onSave, onClose, loading = false }) => {
   const [formData, setFormData] = useState({
     name: friend?.name || '',
     phone: friend?.phone || friend?.email || ''
   });
   const [errors, setErrors] = useState({});
-
-  if (!isOpen) return null;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,14 +39,14 @@ const EditFriendModal = ({ isOpen, onClose, onSave, friend, loading = false }) =
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Edit Friend</h2>
-          <button className="modal-close" onClick={onClose}>&times;</button>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-[#0F172A] rounded-xl shadow-lg border border-emerald-500/20 w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-6 border-b border-emerald-500/10">
+          <h2 className="text-xl font-semibold text-textPrimary">Edit Friend</h2>
+          <button className="text-textSecondary hover:text-textPrimary text-2xl" onClick={onClose}>&times;</button>
         </div>
         <form onSubmit={handleSubmit}>
-          <div className="modal-body">
+          <div className="p-6 space-y-4">
             <Input
               label="Name"
               name="name"
@@ -67,11 +65,11 @@ const EditFriendModal = ({ isOpen, onClose, onSave, friend, loading = false }) =
               placeholder="10-digit number"
             />
           </div>
-          <div className="modal-footer">
-            <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>
+          <div className="flex gap-3 p-6 pt-0">
+            <Button type="button" variant="secondary" onClick={onClose} disabled={loading} className="flex-1">
               Cancel
             </Button>
-            <Button type="submit" loading={loading}>
+            <Button type="submit" loading={loading} className="flex-1">
               Save Changes
             </Button>
           </div>

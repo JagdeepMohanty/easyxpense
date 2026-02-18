@@ -15,20 +15,20 @@ const Sidebar = () => {
   if (!user) return null;
 
   return (
-    <aside className="w-64 bg-pureblack h-screen fixed left-0 top-0 flex flex-col border-r border-white/5">
-      <div className="p-6 border-b border-white/5">
-        <h1 className="text-2xl font-bold text-primarywhite">EasyXpense</h1>
-        <p className="text-xs text-muted mt-1">Cyber Edition</p>
+    <aside className="w-64 bg-[#020617] h-screen fixed left-0 top-0 flex flex-col border-r border-emerald-500/10">
+      <div className="p-6 border-b border-emerald-500/10">
+        <h1 className="text-2xl font-bold text-textPrimary">EasyXpense</h1>
+        <p className="text-xs text-textSecondary mt-1">Dark Emerald</p>
       </div>
 
-      <div className="p-4 border-b border-white/5">
+      <div className="p-4 border-b border-emerald-500/10">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-cyber-gradient flex items-center justify-center text-primarywhite font-bold">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-400 flex items-center justify-center text-black font-bold">
             {user.name?.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-primarywhite truncate">{user.name}</p>
-            <p className="text-xs text-muted truncate">{user.email || user.phone}</p>
+            <p className="text-sm font-semibold text-textPrimary truncate">{user.name}</p>
+            <p className="text-xs text-textSecondary truncate">{user.email || user.phone}</p>
           </div>
         </div>
       </div>
@@ -39,10 +39,10 @@ const Sidebar = () => {
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
+              `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                 isActive
-                  ? 'bg-cyber-gradient text-primarywhite font-bold shadow-glow'
-                  : 'text-muted hover:text-primarywhite hover:bg-offblack'
+                  ? 'bg-emerald-500/10 text-emerald-400 font-semibold'
+                  : 'text-textSecondary hover:text-emerald-400 hover:bg-emerald-500/5'
               }`
             }
           >
@@ -52,10 +52,10 @@ const Sidebar = () => {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-white/5">
+      <div className="p-4 border-t border-emerald-500/10">
         <button
           onClick={logout}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:text-primarywhite hover:bg-offblack transition-all"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-textSecondary hover:text-red-400 hover:bg-red-500/5 transition-all"
         >
           <span className="text-xl">🚪</span>
           <span>Logout</span>

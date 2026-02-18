@@ -1,248 +1,88 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+// Validate API URL to prevent SSRF
+const validateApiUrl = (url) => {
+  try {
+    const parsedUrl = new URL(url);
+    const allowedHosts = ['localhost', '127.0.0.1', 'easyxpense.onrender.com'];
+    const allowedPorts = ['3000', '5000', '5173', '443', '80'];
+    
+    if (!allowedHosts.includes(parsedUrl.hostname) && 
+        !parsedUrl.hostname.endsWith('.onrender.com') &&
+        !parsedUrl.hostname.endsWith('.netlify.app')) {
+      throw new Error('Invalid API host');
+    }
+    
+    if (parsedUrl.port && !allowedPorts.includes(parsedUrl.port)) {
+      throw new Error('Invalid API port');
+    }
+    
+    return url;
+  } catch (error) {
+    throw new Error('Invalid API URL');
+  }
+};
+
+const API_URL = validateApiUrl(import.meta.env.VITE_API_URL || 'http://localhost:5000');
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30s for Render cold starts
+  timeout: 30000,
 });
 
-// Track if refresh is in progress to avoid multiple refresh calls
-let isRefreshing = false;
-let failedQueue = [];
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
-const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-  failedQueue = [];
-};
-
-// Request interceptor
-api.interceptors.request.use(
-  (config) => config,
-  (error) => Promise.reject(error)
-);
-
-// Response interceptor with automatic token refresh
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    // Handle 401 Unauthorized with token refresh
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        // Queue the request while refresh is in progress
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then(token => {
-            originalRequest.headers['Authorization'] = 'Bearer ' + token;
-            return api(originalRequest);
-          })
-          .catch(err => Promise.reject(err));
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      const refreshToken = localStorage.getItem('refresh_token');
-
-      if (!refreshToken) {
-        // No refresh token, logout
-        isRefreshing = false;
-        localStorage.removeItem('token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        delete axios.defaults.headers.common['Authorization'];
-        window.location.href = '/login';
-        return Promise.reject(error);
-      }
-
-      try {
-        // Call refresh endpoint
-        const response = await axios.post(`${API_BASE_URL}/api/auth/refresh`, {
-          refresh_token: refreshToken
-        });
-
-        const { access_token, refresh_token: newRefreshToken, token } = response.data;
-        const newAccessToken = access_token || token;
-
-        // Update stored tokens
-        localStorage.setItem('token', newAccessToken);
-        if (newRefreshToken) {
-          localStorage.setItem('refresh_token', newRefreshToken);
-        }
-        axios.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
-
-        // Process queued requests
-        processQueue(null, newAccessToken);
-        isRefreshing = false;
-
-        // Retry original request with new token
-        originalRequest.headers['Authorization'] = 'Bearer ' + newAccessToken;
-        return api(originalRequest);
-      } catch (refreshError) {
-        // Refresh failed, logout
-        processQueue(refreshError, null);
-        isRefreshing = false;
-        localStorage.removeItem('token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        delete axios.defaults.headers.common['Authorization'];
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
     }
-    
-    // Enhanced error handling
-    if (error.code === 'ECONNABORTED') {
-      error.message = 'Request timeout. Server may be starting up (Render cold start). Please try again.';
-    } else if (error.response) {
-      // Server responded with error
-      const data = error.response.data;
-      if (data.error) {
-        error.message = data.error;
-      } else if (data.message) {
-        error.message = data.message;
-      } else {
-        error.message = `Server error: ${error.response.status}`;
-      }
-    } else if (error.request) {
-      // Request made but no response
-      error.message = 'Cannot reach server. Please check your connection or try again later.';
-    }
-    
     return Promise.reject(error);
   }
 );
 
-// Helper function for retrying requests (for cold starts)
-const retryRequest = async (requestFn, retries = 2, delay = 2000) => {
-  try {
-    return await requestFn();
-  } catch (error) {
-    if (retries > 0 && (error.code === 'ECONNABORTED' || !error.response)) {
-      await new Promise(resolve => setTimeout(resolve, delay));
-      return retryRequest(requestFn, retries - 1, delay);
-    }
-    throw error;
-  }
-};
-
-export const expensesAPI = {
-  getAll: (groupId, page = 1, limit = 8) => {
-    let url = '/api/expenses';
-    const params = [];
-    if (groupId) params.push(`group_id=${groupId}`);
-    params.push(`page=${page}`);
-    params.push(`limit=${limit}`);
-    if (params.length) url += '?' + params.join('&');
-    return retryRequest(() => api.get(url));
-  },
-  create: (expenseData) => api.post('/api/expenses', expenseData),
-  update: (id, expenseData) => api.put(`/api/expenses/${id}`, expenseData),
-  delete: (id) => api.delete(`/api/expenses/${id}`),
-};
-
-export const debtsAPI = {
-  getAll: (groupId, optimize = true) => {
-    let url = '/api/debts';
-    const params = [];
-    if (groupId) params.push(`group_id=${groupId}`);
-    if (!optimize) params.push('optimize=false');
-    if (params.length) url += '?' + params.join('&');
-    return retryRequest(() => api.get(url));
-  },
-};
-
-export const settlementsAPI = {
-  create: (settlementData) => api.post('/api/settlements', settlementData),
-  getHistory: (groupId, page = 1, limit = 10) => {
-    let url = '/api/settlements';
-    const params = [];
-    if (groupId) params.push(`group_id=${groupId}`);
-    params.push(`page=${page}`);
-    params.push(`limit=${limit}`);
-    if (params.length) url += '?' + params.join('&');
-    return retryRequest(() => api.get(url));
-  },
-  delete: (id) => api.delete(`/api/settlements/${id}`),
+export const authAPI = {
+  login: (email, phone, password) => api.post('/api/auth/login', { email, phone, password }),
+  register: (name, email, phone, password) => api.post('/api/auth/register', { name, email, phone, password }),
+  logout: () => api.post('/api/auth/logout'),
 };
 
 export const friendsAPI = {
-  getAll: (groupId, page = 1, limit = 10) => {
-    let url = '/api/friends';
-    const params = [];
-    if (groupId) params.push(`group_id=${groupId}`);
-    params.push(`page=${page}`);
-    params.push(`limit=${limit}`);
-    if (params.length) url += '?' + params.join('&');
-    return retryRequest(() => api.get(url));
-  },
-  add: (friendData) => api.post('/api/friends', friendData),
-  update: (id, friendData) => api.put(`/api/friends/${id}`, friendData),
+  getAll: (search, page = 1, limit = 10) => api.get('/api/friends', { params: { search, page, limit } }),
+  add: (data) => api.post('/api/friends', data),
+  update: (id, data) => api.put(`/api/friends/${id}`, data),
   delete: (id) => api.delete(`/api/friends/${id}`),
 };
 
-export const groupsAPI = {
-  getAll: () => retryRequest(() => api.get('/api/groups')),
-  getById: (groupId) => retryRequest(() => api.get(`/api/groups/${groupId}`)),
-  create: (groupData) => api.post('/api/groups', groupData),
-  findByCode: (code) => api.get(`/api/groups?code=${code}`),
-  delete: (groupId) => api.delete(`/api/groups/${groupId}`),
-  addMember: (groupId, memberName) => api.post(`/api/groups/${groupId}/members`, { member_name: memberName }),
-  removeMember: (groupId, memberName) => api.delete(`/api/groups/${groupId}/members/${memberName}`),
+export const expensesAPI = {
+  getAll: (search, page = 1, limit = 10) => api.get('/api/expenses', { params: { search, page, limit } }),
+  create: (data) => api.post('/api/expenses', data),
+  update: (id, data) => api.put(`/api/expenses/${id}`, data),
+  delete: (id) => api.delete(`/api/expenses/${id}`),
 };
 
-export const groupTransactionsAPI = {
-  create: (groupId, transactionData) => api.post(`/api/groups/${groupId}/transactions`, transactionData),
-  getAll: (groupId, page = 1, limit = 20) => {
-    return retryRequest(() => api.get(`/api/groups/${groupId}/transactions?page=${page}&limit=${limit}`));
-  },
-  getBalances: (groupId) => retryRequest(() => api.get(`/api/groups/${groupId}/balances`)),
+export const groupsAPI = {
+  getAll: () => api.get('/api/groups'),
+  create: (data) => api.post('/api/groups', data),
+  update: (id, data) => api.put(`/api/groups/${id}`, data),
+  delete: (id) => api.delete(`/api/groups/${id}`),
 };
 
 export const analyticsAPI = {
-  getMonthlySummary: (months = 6) => retryRequest(() => api.get(`/api/expenses/monthly-summary?months=${months}`)),
-  getCategoryBreakdown: () => retryRequest(() => api.get('/api/expenses/category-breakdown')),
-  getGroupSummary: (groupId) => retryRequest(() => api.get(`/api/groups/${groupId}/summary`)),
-  getGroupMemberBalances: (groupId) => retryRequest(() => api.get(`/api/groups/${groupId}/member-balances`)),
-  getGroupChartData: (groupId) => retryRequest(() => api.get(`/api/groups/${groupId}/chart-data`)),
-};
-
-export const healthAPI = {
-  check: () => api.get('/health'),
-};
-
-export const authAPI = {
-  login: (email, phone, password) => {
-    const payload = { password };
-    if (email) payload.email = email;
-    if (phone) payload.phone = phone;
-    return api.post('/api/auth/login', payload);
-  },
-  register: (name, email, phone, password) => {
-    const payload = { name, password };
-    if (email) payload.email = email;
-    if (phone) payload.phone = phone;
-    return api.post('/api/auth/register', payload);
-  },
-  logout: () => {
-    const refreshToken = localStorage.getItem('refresh_token');
-    return api.post('/api/auth/logout', { refresh_token: refreshToken });
-  },
-  refresh: (refreshToken) => {
-    return axios.post(`${API_BASE_URL}/api/auth/refresh`, { refresh_token: refreshToken });
-  },
+  getMonthlySummary: (months = 6) => api.get('/api/analytics/monthly', { params: { months } }),
+  getCategoryBreakdown: () => api.get('/api/analytics/categories'),
 };
 
 export default api;
