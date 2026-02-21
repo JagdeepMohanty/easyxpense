@@ -3,9 +3,13 @@ from flask_cors import CORS
 from pymongo import MongoClient
 import os
 import logging
-import sys
+
+# Global MongoDB client
+mongo_client = None
 
 def create_app(config_name=None):
+    global mongo_client
+    
     app = Flask(__name__)
     
     # Load environment variables
@@ -24,12 +28,20 @@ def create_app(config_name=None):
          allow_headers=['Content-Type', 'Authorization'],
          supports_credentials=False)
     
-    # MongoDB connection
+    # MongoDB connection with connection pooling
     try:
-        client = MongoClient(app.config['MONGO_URI'], serverSelectionTimeoutMS=5000)
-        app.db = client['EasyXpense']
+        if mongo_client is None:
+            mongo_client = MongoClient(
+                app.config['MONGO_URI'],
+                serverSelectionTimeoutMS=5000,
+                maxPoolSize=50,
+                minPoolSize=10,
+                maxIdleTimeMS=30000,
+                connectTimeoutMS=10000
+            )
+        app.db = mongo_client['EasyXpense']
         app.db.command('ping')
-        app.logger.info('MongoDB connected successfully')
+        app.logger.info('MongoDB connected successfully with connection pooling')
     except Exception as e:
         app.logger.error(f'MongoDB connection failed: {e}')
         raise
@@ -48,17 +60,35 @@ def create_app(config_name=None):
     from app.routes.expenses import expenses_bp
     from app.routes.groups import groups_bp
     from app.routes.analytics import analytics_bp
+    from app.routes.health import health_bp
+    from app.routes.debts import debts_bp
+    from app.routes.settlements import settlements_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(friends_bp, url_prefix='/api/friends')
     app.register_blueprint(expenses_bp, url_prefix='/api/expenses')
     app.register_blueprint(groups_bp, url_prefix='/api/groups')
     app.register_blueprint(analytics_bp, url_prefix='/api/analytics')
+    app.register_blueprint(health_bp, url_prefix='/api')
+    app.register_blueprint(debts_bp, url_prefix='/api/debts')
+    app.register_blueprint(settlements_bp, url_prefix='/api/settlements')
     
-    # Health endpoint
+    # Health endpoint (also at root for monitoring)
     @app.route('/health')
     def health():
-        return jsonify({'status': 'healthy'}), 200
+        try:
+            # Check MongoDB connection
+            app.db.command('ping')
+            return jsonify({
+                'status': 'healthy',
+                'database': 'connected'
+            }), 200
+        except Exception as e:
+            return jsonify({
+                'status': 'unhealthy',
+                'database': 'disconnected',
+                'error': str(e)
+            }), 503
     
     # Error handlers
     @app.errorhandler(404)

@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { debtsAPI, settlementsAPI } from '../services/api';
 import { formatCurrency } from '../utils/currency';
-import Card from '../components/ui/Card';
-import Button from '../components/ui/Button';
-import StatCard from '../components/ui/StatCard';
-import Input from '../components/ui/Input';
+import Header from '../components/Header';
 
 const DebtTracker = () => {
   const [debts, setDebts] = useState([]);
@@ -14,10 +11,9 @@ const DebtTracker = () => {
   const [settlementAmount, setSettlementAmount] = useState('');
   const [settlingLoading, setSettlingLoading] = useState(false);
 
-  // FIX: Fetch debts on mount and when navigating back to this page
   useEffect(() => {
     fetchDebts();
-  }, []); // Empty deps is correct - fetchDebts is stable
+  }, []);
 
   const fetchDebts = async () => {
     try {
@@ -26,20 +22,15 @@ const DebtTracker = () => {
       
       const response = await debtsAPI.getAll();
       
-      // FIX: Handle optimized response format correctly
       if (response.data.debts) {
-        // Optimized format: {debts: [], balances: {}}
         setDebts(Array.isArray(response.data.debts) ? response.data.debts : []);
       } else if (Array.isArray(response.data)) {
-        // Legacy format: direct array
         setDebts(response.data);
       } else {
-        // Fallback: empty array
         setDebts([]);
       }
     } catch (err) {
       setError(err.message || 'Failed to load debts');
-      console.error('Debts error:', err);
     } finally {
       setLoading(false);
     }
@@ -62,11 +53,9 @@ const DebtTracker = () => {
 
       setSettlingDebt(null);
       setSettlementAmount('');
-      // FIX: Refresh debts list after settlement to show updated data
       await fetchDebts();
     } catch (err) {
       alert(err.message || 'Failed to settle debt');
-      console.error('Settlement error:', err);
     } finally {
       setSettlingLoading(false);
     }
@@ -74,20 +63,22 @@ const DebtTracker = () => {
 
   if (loading) {
     return (
-      <div className="loading">
-        <div className="spinner"></div>
-        Loading debts...
+      <div>
+        <Header title="Debt Tracker" />
+        <div className="flex items-center justify-center h-64">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mr-3"></div>
+          <span className="text-textSecondary dark:text-textSecondary-dark">Loading debts...</span>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="alert alert-danger">
-        <span>⚠️</span>
-        <div>
-          <strong>Error loading debts</strong>
-          <p>{error}</p>
+      <div>
+        <Header title="Debt Tracker" />
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400">
+          {error}
         </div>
       </div>
     );
@@ -97,169 +88,152 @@ const DebtTracker = () => {
   const totalAmount = debts.reduce((sum, debt) => sum + (debt.amount || 0), 0);
 
   return (
-    <div className="debt-tracker">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Debt Tracker</h1>
-        <p className="text-gray-600">Manage and settle outstanding debts with friends</p>
-      </div>
+    <div>
+      <Header title="Debt Tracker" />
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <StatCard
-          title="Pending Settlements"
-          value={activeDebts.length}
-          icon="⚖️"
-          changeType={activeDebts.length > 0 ? 'negative' : 'positive'}
-          change={activeDebts.length > 0 ? 'Need attention' : 'All clear'}
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 mb-8">
+        <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md">
+          <h3 className="text-sm font-medium text-textSecondary dark:text-textSecondary-dark mb-2">Pending Settlements</h3>
+          <p className="text-2xl font-bold text-textPrimary dark:text-textPrimary-dark">{activeDebts.length}</p>
+          <p className="text-xs text-textSecondary dark:text-textSecondary-dark mt-1">
+            {activeDebts.length > 0 ? 'Need attention' : 'All clear'}
+          </p>
+        </div>
         
-        <StatCard
-          title="Total Amount"
-          value={formatCurrency(totalAmount)}
-          icon="💰"
-          changeType={totalAmount > 0 ? 'negative' : 'neutral'}
-        />
+        <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md">
+          <h3 className="text-sm font-medium text-textSecondary dark:text-textSecondary-dark mb-2">Total Amount</h3>
+          <p className="text-2xl font-bold text-textPrimary dark:text-textPrimary-dark">{formatCurrency(totalAmount)}</p>
+        </div>
         
-        <StatCard
-          title="Optimization"
-          value="60-90%"
-          icon="⚡"
-          changeType="positive"
-          change="Fewer transactions"
-        />
+        <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md">
+          <h3 className="text-sm font-medium text-textSecondary dark:text-textSecondary-dark mb-2">Optimization</h3>
+          <p className="text-2xl font-bold text-primary">60-90%</p>
+          <p className="text-xs text-textSecondary dark:text-textSecondary-dark mt-1">Fewer transactions</p>
+        </div>
       </div>
 
       {/* Active Debts */}
-      <Card>
-        <Card.Header>
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-900">Active Debts</h2>
-            {activeDebts.length > 0 && (
-              <div className="text-sm text-gray-500">
-                Optimized to minimize transactions
-              </div>
-            )}
-          </div>
-        </Card.Header>
-        <Card.Body>
-          {activeDebts.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">🎉</div>
-              <div className="empty-state-title">All settled up!</div>
-              <div className="empty-state-description">
-                No outstanding debts. Everyone's square!
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {activeDebts.map((debt, index) => (
-                <div key={index} className="p-6 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center justify-between">
-                    {/* Debt Info */}
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-3">
-                        {/* Debtor Avatar */}
-                        <div className="w-12 h-12 bg-danger-100 rounded-full flex items-center justify-center">
-                          <span className="text-danger-600 font-semibold text-lg">
-                            {debt.debtor?.charAt(0)?.toUpperCase() || '?'}
-                          </span>
-                        </div>
-                        
-                        {/* Arrow */}
-                        <div className="text-gray-400 text-2xl">→</div>
-                        
-                        {/* Creditor Avatar */}
-                        <div className="w-12 h-12 bg-success-100 rounded-full flex items-center justify-center">
-                          <span className="text-success-600 font-semibold text-lg">
-                            {debt.creditor?.charAt(0)?.toUpperCase() || '?'}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <h3 className="font-semibold text-gray-900 text-lg">
-                          {debt.debtor} owes {debt.creditor}
-                        </h3>
-                        <p className="text-2xl font-bold text-danger-600">
-                          {formatCurrency(debt.amount)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Settlement Actions */}
-                    <div className="flex items-center gap-3">
-                      {settlingDebt === index ? (
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            value={settlementAmount}
-                            onChange={(e) => setSettlementAmount(e.target.value)}
-                            placeholder="Amount"
-                            min="0.01"
-                            step="0.01"
-                            className="w-24"
-                          />
-                          <Button
-                            onClick={() => handleSettleDebt(debt)}
-                            variant="success"
-                            size="sm"
-                            loading={settlingLoading}
-                          >
-                            Confirm
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              setSettlingDebt(null);
-                              setSettlementAmount('');
-                            }}
-                            variant="secondary"
-                            size="sm"
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          onClick={() => {
-                            setSettlingDebt(index);
-                            setSettlementAmount(debt.amount.toString());
-                          }}
-                          variant="primary"
-                          size="sm"
-                          icon="✓"
-                        >
-                          Settle Up
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+      <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h2 className="text-xl font-semibold text-textPrimary dark:text-textPrimary-dark">Active Debts</h2>
+          {activeDebts.length > 0 && (
+            <div className="text-sm text-textSecondary dark:text-textSecondary-dark">
+              Optimized to minimize transactions
             </div>
           )}
-        </Card.Body>
-      </Card>
+        </div>
+
+        {activeDebts.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🎉</div>
+            <div className="text-xl font-semibold text-textPrimary dark:text-textPrimary-dark mb-2">All settled up!</div>
+            <div className="text-textSecondary dark:text-textSecondary-dark">
+              No outstanding debts. Everyone's square!
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {activeDebts.map((debt, index) => (
+              <div key={index} className="p-4 sm:p-6 bg-background dark:bg-background-dark rounded-lg hover:bg-primary/5 transition-colors">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  {/* Debt Info */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
+                      {/* Debtor Avatar */}
+                      <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                        <span className="text-red-600 dark:text-red-400 font-semibold text-lg">
+                          {debt.debtor?.charAt(0)?.toUpperCase() || '?'}
+                        </span>
+                      </div>
+                      
+                      {/* Arrow */}
+                      <div className="text-textSecondary dark:text-textSecondary-dark text-2xl">→</div>
+                      
+                      {/* Creditor Avatar */}
+                      <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                        <span className="text-green-600 dark:text-green-400 font-semibold text-lg">
+                          {debt.creditor?.charAt(0)?.toUpperCase() || '?'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-semibold text-textPrimary dark:text-textPrimary-dark text-lg">
+                        {debt.debtor} owes {debt.creditor}
+                      </h3>
+                      <p className="text-2xl font-bold text-red-500">
+                        {formatCurrency(debt.amount)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Settlement Actions */}
+                  <div className="flex items-center gap-3">
+                    {settlingDebt === index ? (
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <input
+                          type="number"
+                          value={settlementAmount}
+                          onChange={(e) => setSettlementAmount(e.target.value)}
+                          placeholder="Amount"
+                          min="0.01"
+                          step="0.01"
+                          className="px-3 py-2 bg-card dark:bg-card-dark border border-primary/20 rounded-lg text-textPrimary dark:text-textPrimary-dark w-24"
+                        />
+                        <button
+                          onClick={() => handleSettleDebt(debt)}
+                          disabled={settlingLoading}
+                          className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+                        >
+                          {settlingLoading ? '...' : 'Confirm'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSettlingDebt(null);
+                            setSettlementAmount('');
+                          }}
+                          className="px-4 py-2 bg-background dark:bg-background-dark border border-primary/20 text-textSecondary dark:text-textSecondary-dark rounded-lg font-medium hover:border-primary/40 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setSettlingDebt(index);
+                          setSettlementAmount(debt.amount.toString());
+                        }}
+                        className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors"
+                      >
+                        Settle Up
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Info Card */}
       {activeDebts.length > 0 && (
-        <Card className="mt-8">
-          <Card.Body>
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span className="text-primary-600 text-2xl">💡</span>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Smart Debt Optimization</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  These debts have been optimized to minimize the number of transactions needed. 
-                  Instead of tracking every individual payment, we calculate who owes what overall 
-                  and show you the most efficient way to settle up.
-                </p>
-              </div>
+        <div className="mt-6 bg-card dark:bg-card-dark rounded-xl p-6 shadow-md">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-primary text-2xl">💡</span>
             </div>
-          </Card.Body>
-        </Card>
+            <div>
+              <h3 className="font-semibold text-textPrimary dark:text-textPrimary-dark mb-2">Smart Debt Optimization</h3>
+              <p className="text-textSecondary dark:text-textSecondary-dark text-sm leading-relaxed">
+                These debts have been optimized to minimize the number of transactions needed. 
+                Instead of tracking every individual payment, we calculate who owes what overall 
+                and show you the most efficient way to settle up.
+              </p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

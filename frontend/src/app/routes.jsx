@@ -107,20 +107,6 @@ function AppRoutes() {
           }
         />
         
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-lg">
-                  <h2 className="text-2xl font-bold text-textPrimary dark:text-textPrimary-dark mb-4">Settings</h2>
-                  <p className="text-textSecondary dark:text-textSecondary-dark">Settings page coming soon...</p>
-                </div>
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        />
-        
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

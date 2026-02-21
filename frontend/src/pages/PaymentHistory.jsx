@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { expensesAPI, settlementsAPI } from '../services/api';
 import { formatCurrency } from '../utils/currency';
 import Pagination from '../components/dashboard/Pagination';
+import Header from '../components/Header';
 
 const PaymentHistory = () => {
   const [expenses, setExpenses] = useState([]);
@@ -35,7 +36,7 @@ const PaymentHistory = () => {
   const fetchSettlements = useCallback(async (page = 1) => {
     try {
       setLoading(true);
-      const response = await settlementsAPI.getHistory(null, page, limit);
+      const response = await settlementsAPI.getHistory?.(null, page, limit) || { data: { data: [], totalPages: 1, total: 0 } };
       const { data, totalPages, total } = response.data;
       setSettlements(Array.isArray(data) ? data : []);
       setSettlementsTotalPages(totalPages || 1);
@@ -75,28 +76,25 @@ const PaymentHistory = () => {
   };
 
   return (
-    <div className="payment-history">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Payment History</h1>
-        <p className="text-gray-600">View all your expenses and settlements</p>
-      </div>
-
-      <div className="flex gap-2 mb-6 border-b border-gray-200">
+    <div>
+      <Header title="Payment History" />
+      
+      <div className="flex gap-2 mb-6 border-b border-primary/10 overflow-x-auto">
         <button
-          className={`px-6 py-3 font-medium text-sm transition-colors relative ${
+          className={`px-4 sm:px-6 py-3 font-medium text-sm transition-colors relative whitespace-nowrap ${
             activeTab === 'expenses'
-              ? 'text-primary-600 border-b-2 border-primary-600'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'text-primary border-b-2 border-primary'
+              : 'text-textSecondary dark:text-textSecondary-dark hover:text-textPrimary dark:hover:text-textPrimary-dark'
           }`}
           onClick={() => setActiveTab('expenses')}
         >
           Expenses ({expensesTotal})
         </button>
         <button
-          className={`px-6 py-3 font-medium text-sm transition-colors relative ${
+          className={`px-4 sm:px-6 py-3 font-medium text-sm transition-colors relative whitespace-nowrap ${
             activeTab === 'settlements'
-              ? 'text-primary-600 border-b-2 border-primary-600'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'text-primary border-b-2 border-primary'
+              : 'text-textSecondary dark:text-textSecondary-dark hover:text-textPrimary dark:hover:text-textPrimary-dark'
           }`}
           onClick={() => setActiveTab('settlements')}
         >
@@ -104,105 +102,107 @@ const PaymentHistory = () => {
         </button>
       </div>
 
-      <div className="card">
-        <div className="card-body">
-          {loading ? (
-            <div className="loading">
-              <div className="spinner"></div>
-              Loading...
+      <div className="bg-card dark:bg-card-dark rounded-xl p-4 sm:p-6 shadow-md">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mr-3"></div>
+            <span className="text-textSecondary dark:text-textSecondary-dark">Loading...</span>
+          </div>
+        ) : activeTab === 'expenses' ? (
+          expenses.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">💸</div>
+              <div className="text-xl font-semibold text-textPrimary dark:text-textPrimary-dark mb-2">No expenses yet</div>
+              <div className="text-textSecondary dark:text-textSecondary-dark">
+                Your expense history will appear here once you add some.
+              </div>
             </div>
-          ) : activeTab === 'expenses' ? (
-            expenses.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-state-icon">💸</div>
-                <div className="empty-state-title">No expenses yet</div>
-                <div className="empty-state-description">
-                  Your expense history will appear here once you add some.
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {expenses.map(expense => (
-                  <div 
-                    key={expense._id} 
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-xl">💰</span>
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="font-medium text-gray-900 truncate">{expense.description}</h4>
-                        <p className="text-sm text-gray-600">
-                          Paid by {expense.payer} • {expense.participants?.length || 0} people
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">{formatDate(expense.date)}</p>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="font-semibold text-gray-900">
-                        {formatCurrency(expense.amount)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )
           ) : (
-            settlements.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-state-icon">💳</div>
-                <div className="empty-state-title">No settlements yet</div>
-                <div className="empty-state-description">
-                  Settlement records will show up here when you settle debts.
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {settlements.map(settlement => (
-                  <div 
-                    key={settlement._id} 
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-success-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-xl">✅</span>
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="font-medium text-gray-900">Settlement</h4>
-                        <p className="text-sm text-gray-600">
-                          {settlement.fromUser} → {settlement.toUser}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">{formatDate(settlement.date)}</p>
-                      </div>
+            <div className="space-y-3">
+              {expenses.map(expense => (
+                <div 
+                  key={expense._id} 
+                  className="flex items-center justify-between p-4 bg-background dark:bg-background-dark rounded-lg hover:bg-primary/5 transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="text-xl">💰</span>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="font-semibold text-success-600">
-                        {formatCurrency(settlement.amount)}
-                      </div>
+                    <div className="min-w-0">
+                      <h4 className="font-medium text-textPrimary dark:text-textPrimary-dark truncate">{expense.description}</h4>
+                      <p className="text-sm text-textSecondary dark:text-textSecondary-dark">
+                        Paid by {expense.payer} • {expense.participants?.length || 0} people
+                      </p>
+                      <p className="text-xs text-textSecondary dark:text-textSecondary-dark mt-1">{formatDate(expense.date)}</p>
                     </div>
                   </div>
-                ))}
+                  <div className="text-right flex-shrink-0 ml-4">
+                    <div className="font-semibold text-primary">
+                      {formatCurrency(expense.amount)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : (
+          settlements.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">💳</div>
+              <div className="text-xl font-semibold text-textPrimary dark:text-textPrimary-dark mb-2">No settlements yet</div>
+              <div className="text-textSecondary dark:text-textSecondary-dark">
+                Settlement records will show up here when you settle debts.
               </div>
-            )
-          )}
-        </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {settlements.map(settlement => (
+                <div 
+                  key={settlement._id} 
+                  className="flex items-center justify-between p-4 bg-background dark:bg-background-dark rounded-lg hover:bg-primary/5 transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="text-xl">✅</span>
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="font-medium text-textPrimary dark:text-textPrimary-dark">Settlement</h4>
+                      <p className="text-sm text-textSecondary dark:text-textSecondary-dark">
+                        {settlement.fromUser} → {settlement.toUser}
+                      </p>
+                      <p className="text-xs text-textSecondary dark:text-textSecondary-dark mt-1">{formatDate(settlement.date)}</p>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0 ml-4">
+                    <div className="font-semibold text-primary">
+                      {formatCurrency(settlement.amount)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
       </div>
 
       {activeTab === 'expenses' ? (
-        <Pagination
-          currentPage={expensesPage}
-          totalPages={expensesTotalPages}
-          onPageChange={handleExpensesPageChange}
-          loading={loading}
-        />
+        expensesTotalPages > 1 && (
+          <Pagination
+            currentPage={expensesPage}
+            totalPages={expensesTotalPages}
+            onPageChange={handleExpensesPageChange}
+            loading={loading}
+          />
+        )
       ) : (
-        <Pagination
-          currentPage={settlementsPage}
-          totalPages={settlementsTotalPages}
-          onPageChange={handleSettlementsPageChange}
-          loading={loading}
-        />
+        settlementsTotalPages > 1 && (
+          <Pagination
+            currentPage={settlementsPage}
+            totalPages={settlementsTotalPages}
+            onPageChange={handleSettlementsPageChange}
+            loading={loading}
+          />
+        )
       )}
     </div>
   );

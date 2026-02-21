@@ -46,6 +46,7 @@ export const debtsAPI = {
 // Settlements API
 export const settlementsAPI = {
   getAll: () => axiosClient.get('/api/settlements'),
+  getHistory: (search, page = 1, limit = 10) => axiosClient.get('/api/settlements/history', { params: { search, page, limit } }),
   create: (data) => axiosClient.post('/api/settlements', data),
 };
 

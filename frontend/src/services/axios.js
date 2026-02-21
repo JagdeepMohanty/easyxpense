@@ -25,13 +25,36 @@ const validateApiUrl = (url) => {
 
 const API_URL = validateApiUrl(import.meta.env.VITE_API_URL || 'http://localhost:5000');
 
+// Max retry attempts for cold start
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000;
+
+// Create axios instance with increased timeout
 const axiosClient = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  timeout: 60000, // 60 seconds for cold start
 });
+
+// Retry logic for failed requests
+const retryRequest = async (error, retryCount = 0) => {
+  const originalRequest = error.config;
+  
+  // Only retry on network errors or 5xx errors
+  if (!error.response && retryCount < MAX_RETRIES && !originalRequest._retry) {
+    originalRequest._retry = true;
+    originalRequest.retryCount = retryCount;
+    
+    // Wait before retrying
+    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (retryCount + 1)));
+    
+    return axiosClient(originalRequest);
+  }
+  
+  return Promise.reject(error);
+};
 
 // Request interceptor for adding JWT token
 axiosClient.interceptors.request.use(
@@ -47,17 +70,31 @@ axiosClient.interceptors.request.use(
   }
 );
 
-// Response interceptor for handling errors
+// Response interceptor for handling errors with retry logic
 axiosClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // Handle 401 - Unauthorized
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
+      return Promise.reject(error);
     }
+    
+    // Handle cold start - network errors with retry
+    if (!error.response && originalRequest) {
+      const retryCount = originalRequest.retryCount || 0;
+      return retryRequest(error, retryCount);
+    }
+    
     return Promise.reject(error);
   }
 );
 
 export default axiosClient;
+export const isServerWaking = (error) => {
+  return !error.response && error.code === 'ECONNABORTED';
+};
