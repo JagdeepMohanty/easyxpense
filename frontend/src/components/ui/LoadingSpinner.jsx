@@ -1,1 +1,17 @@
-import React from 'react';\n\nconst LoadingSpinner = ({ size = 'md', className = '' }) => {\n  const sizeClasses = {\n    sm: 'w-4 h-4',\n    md: 'w-8 h-8',\n    lg: 'w-12 h-12'\n  };\n\n  return (\n    <div className={`flex items-center justify-center ${className}`}>\n      <div className={`${sizeClasses[size]} border-2 border-primary border-t-transparent rounded-full animate-spin`}></div>\n    </div>\n  );\n};\n\nexport default LoadingSpinner;
+import React from 'react';
+
+const LoadingSpinner = ({ size = 'md', className = '' }) => {
+  const sizeClasses = {
+    sm: 'w-4 h-4',
+    md: 'w-8 h-8',
+    lg: 'w-12 h-12'
+  };
+
+  return (
+    <div className={`flex items-center justify-center ${className}`}>
+      <div className={`${sizeClasses[size]} border-2 border-primary border-t-transparent rounded-full animate-spin`}></div>
+    </div>
+  );
+};
+
+export default LoadingSpinner;

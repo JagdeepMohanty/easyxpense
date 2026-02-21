@@ -1,1 +1,24 @@
-import React from 'react';\nimport { Navigate } from 'react-router-dom';\nimport { useAuth } from '../context/AuthContext';\nimport LoadingSpinner from './ui/LoadingSpinner';\n\nconst ProtectedRoute = ({ children }) => {\n  const { isAuthenticated, loading } = useAuth();\n\n  if (loading) {\n    return (\n      <div className=\"min-h-screen flex items-center justify-center bg-background dark:bg-background-dark\">\n        <LoadingSpinner size=\"lg\" />\n      </div>\n    );\n  }\n\n  if (!isAuthenticated) {\n    return <Navigate to=\"/login\" replace />;\n  }\n\n  return children;\n};\n\nexport default ProtectedRoute;
+import React from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import LoadingSpinner from './ui/LoadingSpinner';
+
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background dark:bg-background-dark">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
+
+export default ProtectedRoute;
