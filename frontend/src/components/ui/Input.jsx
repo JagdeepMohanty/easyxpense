@@ -1,27 +1,46 @@
 import React from 'react';
 
-const Input = ({ 
-  label,
-  error,
-  helper,
-  className = '',
+const Input = React.forwardRef(({ 
+  label, 
+  error, 
+  className = '', 
+  type = 'text',
+  required = false,
   ...props 
-}) => {
-  const inputClasses = [
-    'w-full px-4 py-2 bg-[#020617] border rounded-lg text-textPrimary placeholder-textSecondary transition-all duration-200',
-    error ? 'border-red-500 focus:border-red-400' : 'border-emerald-500/20 focus:border-emerald-400',
-    'focus:outline-none focus:ring-2 focus:ring-emerald-500/20',
-    className
-  ].filter(Boolean).join(' ');
-
+}, ref) => {
   return (
-    <div className="space-y-2">
-      {label && <label className="block text-sm font-medium text-textPrimary">{label}</label>}
-      <input className={inputClasses} {...props} />
-      {helper && <div className="text-xs text-textSecondary">{helper}</div>}
-      {error && <div className="text-xs text-red-400 flex items-center gap-1">⚠️ {error}</div>}
+    <div className="w-full">
+      {label && (
+        <label className="block text-sm font-medium text-textPrimary dark:text-textPrimary-dark mb-2">
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+      )}
+      <input
+        ref={ref}
+        type={type}
+        className={`
+          w-full h-11 px-4 py-2
+          bg-card dark:bg-card-dark
+          border border-gray-300 dark:border-gray-600
+          rounded-lg
+          text-textPrimary dark:text-textPrimary-dark
+          placeholder-textSecondary dark:placeholder-textSecondary-dark
+          focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
+          disabled:opacity-50 disabled:cursor-not-allowed
+          transition-all duration-200
+          ${error ? 'border-red-500 focus:ring-red-500' : ''}
+          ${className}
+        `}
+        {...props}
+      />
+      {error && (
+        <p className="mt-1 text-sm text-red-500">{error}</p>
+      )}
     </div>
   );
-};
+});
+
+Input.displayName = 'Input';
 
 export default Input;

@@ -2,7 +2,8 @@ from flask import Blueprint, request, jsonify, current_app
 import jwt
 import bcrypt
 from datetime import datetime, timedelta
-from app.utils.sanitize import sanitize_input, validate_email, validate_phone
+from app.utils.helpers import sanitize_input, validate_email, validate_phone
+from app.models.user_model import User
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -47,12 +48,7 @@ def login():
         
         return jsonify({
             'token': token,
-            'user': {
-                'id': str(user['_id']),
-                'name': user['name'],
-                'email': user.get('email'),
-                'phone': user.get('phone')
-            }
+            'user': User.to_dict(user)
         }), 200
         
     except Exception as e:
@@ -97,17 +93,7 @@ def register():
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         
         # Create user
-        user_data = {
-            'name': name,
-            'password': hashed_password,
-            'created_at': datetime.utcnow()
-        }
-        
-        if email:
-            user_data['email'] = email
-        if phone:
-            user_data['phone'] = phone
-        
+        user_data = User.create(name, hashed_password, email, phone)
         result = current_app.db.users.insert_one(user_data)
         
         # Generate token
@@ -116,14 +102,10 @@ def register():
             'exp': datetime.utcnow() + timedelta(days=7)
         }, current_app.config['JWT_SECRET_KEY'], algorithm='HS256')
         
+        user_data['_id'] = result.inserted_id
         return jsonify({
             'token': token,
-            'user': {
-                'id': str(result.inserted_id),
-                'name': name,
-                'email': email,
-                'phone': phone
-            }
+            'user': User.to_dict(user_data)
         }), 201
         
     except Exception as e:

@@ -1,211 +1,146 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { expensesAPI, settlementsAPI } from '../services/api';
+import React, { useState, useEffect } from 'react';
+import { settlementsAPI } from '../services/api';
 import { formatCurrency } from '../utils/currency';
-import Pagination from '../components/dashboard/Pagination';
-import Header from '../components/Header';
+import MainLayout from '../layouts/MainLayout';
+import EmptyState from '../components/ui/EmptyState';
+import Input from '../components/ui/Input';
 
 const PaymentHistory = () => {
-  const [expenses, setExpenses] = useState([]);
   const [settlements, setSettlements] = useState([]);
-  const [activeTab, setActiveTab] = useState('expenses');
   const [loading, setLoading] = useState(true);
-  const [expensesPage, setExpensesPage] = useState(1);
-  const [expensesTotalPages, setExpensesTotalPages] = useState(1);
-  const [expensesTotal, setExpensesTotal] = useState(0);
-  const [settlementsPage, setSettlementsPage] = useState(1);
-  const [settlementsTotalPages, setSettlementsTotalPages] = useState(1);
-  const [settlementsTotal, setSettlementsTotal] = useState(0);
-  const limit = 10;
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const fetchExpenses = useCallback(async (page = 1) => {
+  useEffect(() => {
+    fetchSettlements();
+  }, []);
+
+  const fetchSettlements = async () => {
     try {
       setLoading(true);
-      const response = await expensesAPI.getAll(null, page, limit);
-      const { data, totalPages, total } = response.data;
-      setExpenses(Array.isArray(data) ? data : []);
-      setExpensesTotalPages(totalPages || 1);
-      setExpensesTotal(total || 0);
-      setExpensesPage(page);
-    } catch (err) {
-      setExpenses([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [limit]);
-
-  const fetchSettlements = useCallback(async (page = 1) => {
-    try {
-      setLoading(true);
-      const response = await settlementsAPI.getHistory?.(null, page, limit) || { data: { data: [], totalPages: 1, total: 0 } };
-      const { data, totalPages, total } = response.data;
-      setSettlements(Array.isArray(data) ? data : []);
-      setSettlementsTotalPages(totalPages || 1);
-      setSettlementsTotal(total || 0);
-      setSettlementsPage(page);
+      const response = await settlementsAPI.getHistory('', 1, 100);
+      setSettlements(response.data.settlements || response.data || []);
     } catch (err) {
       setSettlements([]);
     } finally {
       setLoading(false);
     }
-  }, [limit]);
+  };
 
-  useEffect(() => {
-    if (activeTab === 'expenses') {
-      fetchExpenses();
-    } else {
-      fetchSettlements();
-    }
-  }, [activeTab, fetchExpenses, fetchSettlements]);
-
-  const handleExpensesPageChange = useCallback((page) => {
-    fetchExpenses(page);
-  }, [fetchExpenses]);
-
-  const handleSettlementsPageChange = useCallback((page) => {
-    fetchSettlements(page);
-  }, [fetchSettlements]);
+  const filteredSettlements = settlements.filter(s =>
+    s.fromUser?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.toUser?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
     });
   };
 
-  return (
-    <div>
-      <Header title="Payment History" />
-      
-      <div className="flex gap-2 mb-6 border-b border-primary/10 overflow-x-auto">
-        <button
-          className={`px-4 sm:px-6 py-3 font-medium text-sm transition-colors relative whitespace-nowrap ${
-            activeTab === 'expenses'
-              ? 'text-primary border-b-2 border-primary'
-              : 'text-textSecondary dark:text-textSecondary-dark hover:text-textPrimary dark:hover:text-textPrimary-dark'
-          }`}
-          onClick={() => setActiveTab('expenses')}
-        >
-          Expenses ({expensesTotal})
-        </button>
-        <button
-          className={`px-4 sm:px-6 py-3 font-medium text-sm transition-colors relative whitespace-nowrap ${
-            activeTab === 'settlements'
-              ? 'text-primary border-b-2 border-primary'
-              : 'text-textSecondary dark:text-textSecondary-dark hover:text-textPrimary dark:hover:text-textPrimary-dark'
-          }`}
-          onClick={() => setActiveTab('settlements')}
-        >
-          Settlements ({settlementsTotal})
-        </button>
-      </div>
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      </MainLayout>
+    );
+  }
 
-      <div className="bg-card dark:bg-card-dark rounded-xl p-4 sm:p-6 shadow-md">
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mr-3"></div>
-            <span className="text-textSecondary dark:text-textSecondary-dark">Loading...</span>
-          </div>
-        ) : activeTab === 'expenses' ? (
-          expenses.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">💸</div>
-              <div className="text-xl font-semibold text-textPrimary dark:text-textPrimary-dark mb-2">No expenses yet</div>
-              <div className="text-textSecondary dark:text-textSecondary-dark">
-                Your expense history will appear here once you add some.
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {expenses.map(expense => (
-                <div 
-                  key={expense._id} 
-                  className="flex items-center justify-between p-4 bg-background dark:bg-background-dark rounded-lg hover:bg-primary/5 transition-colors"
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <span className="text-xl">💰</span>
-                    </div>
-                    <div className="min-w-0">
-                      <h4 className="font-medium text-textPrimary dark:text-textPrimary-dark truncate">{expense.description}</h4>
-                      <p className="text-sm text-textSecondary dark:text-textSecondary-dark">
-                        Paid by {expense.payer} • {expense.participants?.length || 0} people
-                      </p>
-                      <p className="text-xs text-textSecondary dark:text-textSecondary-dark mt-1">{formatDate(expense.date)}</p>
-                    </div>
-                  </div>
-                  <div className="text-right flex-shrink-0 ml-4">
-                    <div className="font-semibold text-primary">
-                      {formatCurrency(expense.amount)}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )
+  return (
+    <MainLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-textPrimary dark:text-textPrimary-dark">Payment History</h1>
+          <p className="text-textSecondary dark:text-textSecondary-dark mt-1">View all your settlement records</p>
+        </div>
+
+        {settlements.length > 0 && (
+          <Input
+            placeholder="Search by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        )}
+
+        {settlements.length === 0 ? (
+          <EmptyState
+            icon="📝"
+            title="No payment history"
+            description="Settlement records will appear here once you start settling debts"
+          />
+        ) : filteredSettlements.length === 0 ? (
+          <EmptyState
+            icon="🔍"
+            title="No results found"
+            description={`No settlements match "${searchTerm}"`}
+          />
         ) : (
-          settlements.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">💳</div>
-              <div className="text-xl font-semibold text-textPrimary dark:text-textPrimary-dark mb-2">No settlements yet</div>
-              <div className="text-textSecondary dark:text-textSecondary-dark">
-                Settlement records will show up here when you settle debts.
-              </div>
+          <div className="bg-card dark:bg-card-dark rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-textSecondary dark:text-textSecondary-dark uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-textSecondary dark:text-textSecondary-dark uppercase tracking-wider">
+                      From
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-textSecondary dark:text-textSecondary-dark uppercase tracking-wider">
+                      To
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-textSecondary dark:text-textSecondary-dark uppercase tracking-wider">
+                      Amount
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {filteredSettlements.map((settlement, index) => (
+                    <tr key={settlement._id || index} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-textPrimary dark:text-textPrimary-dark">
+                        {formatDate(settlement.created_at || settlement.createdAt)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mr-3">
+                            <span className="text-red-600 dark:text-red-400 font-semibold text-sm">
+                              {settlement.fromUser?.charAt(0)?.toUpperCase() || '?'}
+                            </span>
+                          </div>
+                          <span className="text-sm font-medium text-textPrimary dark:text-textPrimary-dark">
+                            {settlement.fromUser}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mr-3">
+                            <span className="text-green-600 dark:text-green-400 font-semibold text-sm">
+                              {settlement.toUser?.charAt(0)?.toUpperCase() || '?'}
+                            </span>
+                          </div>
+                          <span className="text-sm font-medium text-textPrimary dark:text-textPrimary-dark">
+                            {settlement.toUser}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-green-600 dark:text-green-400">
+                        {formatCurrency(settlement.amount)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {settlements.map(settlement => (
-                <div 
-                  key={settlement._id} 
-                  className="flex items-center justify-between p-4 bg-background dark:bg-background-dark rounded-lg hover:bg-primary/5 transition-colors"
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <span className="text-xl">✅</span>
-                    </div>
-                    <div className="min-w-0">
-                      <h4 className="font-medium text-textPrimary dark:text-textPrimary-dark">Settlement</h4>
-                      <p className="text-sm text-textSecondary dark:text-textSecondary-dark">
-                        {settlement.fromUser} → {settlement.toUser}
-                      </p>
-                      <p className="text-xs text-textSecondary dark:text-textSecondary-dark mt-1">{formatDate(settlement.date)}</p>
-                    </div>
-                  </div>
-                  <div className="text-right flex-shrink-0 ml-4">
-                    <div className="font-semibold text-primary">
-                      {formatCurrency(settlement.amount)}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )
+          </div>
         )}
       </div>
-
-      {activeTab === 'expenses' ? (
-        expensesTotalPages > 1 && (
-          <Pagination
-            currentPage={expensesPage}
-            totalPages={expensesTotalPages}
-            onPageChange={handleExpensesPageChange}
-            loading={loading}
-          />
-        )
-      ) : (
-        settlementsTotalPages > 1 && (
-          <Pagination
-            currentPage={settlementsPage}
-            totalPages={settlementsTotalPages}
-            onPageChange={handleSettlementsPageChange}
-            loading={loading}
-          />
-        )
-      )}
-    </div>
+    </MainLayout>
   );
 };
 
-export default React.memo(PaymentHistory);
+export default PaymentHistory;

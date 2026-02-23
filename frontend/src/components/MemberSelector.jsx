@@ -1,69 +1,90 @@
 import React, { useState } from 'react';
+import Input from './ui/Input';
 
-const MemberSelector = ({ members = [], onMembersChange, availableFriends = [] }) => {
-  const [showDropdown, setShowDropdown] = useState(false);
+const MemberSelector = ({ members = [], onChange, label = 'Members' }) => {
+  const [memberName, setMemberName] = useState('');
 
-  const addMember = (friend) => {
-    if (!members.find(m => m.id === friend.id)) {
-      onMembersChange([...members, friend]);
+  const handleAddMember = () => {
+    const trimmed = memberName.trim();
+    if (trimmed && !members.includes(trimmed)) {
+      onChange([...members, trimmed]);
+      setMemberName('');
     }
-    setShowDropdown(false);
   };
 
-  const removeMember = (memberId) => {
-    onMembersChange(members.filter(m => m.id !== memberId));
+  const handleRemoveMember = (index) => {
+    onChange(members.filter((_, i) => i !== index));
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddMember();
+    }
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       <label className="block text-sm font-medium text-textPrimary dark:text-textPrimary-dark">
-        Group Members
+        {label}
       </label>
-      <div className="bg-background dark:bg-background-dark border border-primary/20 rounded-lg px-3 py-2 flex gap-2 flex-wrap min-h-[48px] items-center">
-        {members.map((member) => (
-          <div
-            key={member.id}
-            className="bg-primary/10 text-primary border border-primary/20 rounded-lg px-3 py-2 text-sm flex items-center gap-2"
-          >
-            {member.name}
-            <button
-              type="button"
-              onClick={() => removeMember(member.id)}
-              className="text-primary hover:text-red-500 transition-colors"
-            >
-              ×
-            </button>
-          </div>
-        ))}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setShowDropdown(!showDropdown)}
-            className="bg-primary text-black rounded-full w-8 h-8 flex items-center justify-center hover:bg-accent transition-colors"
-          >
-            +
-          </button>
-          {showDropdown && (
-            <div className="absolute top-10 left-0 bg-card dark:bg-card-dark border border-primary/20 rounded-lg shadow-lg z-10 min-w-[200px]">
-              {availableFriends.filter(f => !members.find(m => m.id === f.id)).map((friend) => (
-                <button
-                  key={friend.id}
-                  type="button"
-                  onClick={() => addMember(friend)}
-                  className="w-full text-left px-4 py-2 hover:bg-primary/10 transition-colors text-textPrimary dark:text-textPrimary-dark"
-                >
-                  {friend.name}
-                </button>
-              ))}
-              {availableFriends.filter(f => !members.find(m => m.id === f.id)).length === 0 && (
-                <div className="px-4 py-2 text-textSecondary dark:text-textSecondary-dark text-sm">
-                  No more friends available
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+      
+      {/* Add Member Input */}
+      <div className="flex gap-2">
+        <Input
+          value={memberName}
+          onChange={(e) => setMemberName(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="Enter member name"
+          className="flex-1"
+        />
+        <button
+          type="button"
+          onClick={handleAddMember}
+          disabled={!memberName.trim()}
+          className="px-4 py-2 h-11 bg-primary hover:bg-primary/90 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+        >
+          Add
+        </button>
       </div>
+
+      {/* Members List */}
+      {members.length > 0 && (
+        <div className="space-y-2">
+          {members.map((member, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between p-3 bg-card dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-lg"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+                  <span className="text-primary font-semibold">
+                    {member.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <span className="text-textPrimary dark:text-textPrimary-dark font-medium">
+                  {member}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleRemoveMember(index)}
+                className="text-red-500 hover:text-red-700 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {members.length === 0 && (
+        <p className="text-sm text-textSecondary dark:text-textSecondary-dark">
+          No members added yet. Add members using the input above.
+        </p>
+      )}
     </div>
   );
 };

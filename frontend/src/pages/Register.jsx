@@ -1,120 +1,138 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Input from '../components/ui/Input';
 
 const Register = () => {
-  const [name, setName] = useState('');
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
+
+    if (!formData.name || !formData.password) {
+      setError('Name and password are required');
+      return;
+    }
+
+    if (!formData.email && !formData.phone) {
+      setError('Email or phone is required');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
 
     try {
-      const isEmail = identifier.includes('@');
-      await register(
-        name,
-        isEmail ? identifier : null,
-        isEmail ? null : identifier,
-        password
-      );
+      setLoading(true);
+      await register(formData.name, formData.email, formData.phone, formData.password);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Registration failed');
+      setError(err.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background dark:bg-background-dark flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-accent/10 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
-            EasyXpense
-          </h1>
-          <p className="text-textSecondary dark:text-textSecondary-dark">Create your account</p>
-        </div>
+        <div className="bg-card dark:bg-card-dark rounded-2xl shadow-xl p-8">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
+              EasyXpense
+            </h1>
+            <p className="text-textSecondary dark:text-textSecondary-dark">
+              Create your account to get started
+            </p>
+          </div>
 
-        <div className="bg-card dark:bg-card-dark rounded-xl shadow-lg border border-primary/10 p-8">
+          {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
-              {error}
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-textPrimary dark:text-textPrimary-dark mb-2">
-                Name
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
-                required
-                className="w-full px-4 py-3 bg-background dark:bg-background-dark border border-primary/20 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-textPrimary dark:text-textPrimary-dark placeholder-textSecondary dark:placeholder-textSecondary-dark"
-              />
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              label="Full Name"
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="John Doe"
+              required
+            />
+
+            <Input
+              label="Email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="your@email.com"
+            />
+
+            <div className="text-center text-sm text-textSecondary dark:text-textSecondary-dark">
+              OR
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-textPrimary dark:text-textPrimary-dark mb-2">
-                Email or Phone
-              </label>
-              <input
-                type="text"
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="Enter email or phone number"
-                required
-                className="w-full px-4 py-3 bg-background dark:bg-background-dark border border-primary/20 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-textPrimary dark:text-textPrimary-dark placeholder-textSecondary dark:placeholder-textSecondary-dark"
-              />
-            </div>
+            <Input
+              label="Phone"
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="+91 1234567890"
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-textPrimary dark:text-textPrimary-dark mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password (min 6 characters)"
-                required
-                minLength={6}
-                className="w-full px-4 py-3 bg-background dark:bg-background-dark border border-primary/20 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-textPrimary dark:text-textPrimary-dark placeholder-textSecondary dark:placeholder-textSecondary-dark"
-              />
-            </div>
+            <Input
+              label="Password"
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              placeholder="At least 6 characters"
+              required
+            />
+
+            <Input
+              label="Confirm Password"
+              type="password"
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              placeholder="Re-enter password"
+              required
+            />
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all shadow-md"
+              className="w-full h-11 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 disabled:from-gray-300 disabled:to-gray-300 text-white font-semibold rounded-lg transition-all disabled:cursor-not-allowed"
             >
-              {loading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                  Registering...
-                </div>
-              ) : (
-                'Register'
-              )}
+              {loading ? 'Creating account...' : 'Register'}
             </button>
           </form>
 
-          <p className="text-center mt-6 text-textSecondary dark:text-textSecondary-dark">
-            Already have an account?{' '}
-            <Link to="/login" className="text-primary font-medium hover:text-accent transition-colors">
-              Login
-            </Link>
-          </p>
+          {/* Footer */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-textSecondary dark:text-textSecondary-dark">
+              Already have an account?{' '}
+              <Link to="/login" className="text-primary hover:text-primary/80 font-medium">
+                Login here
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

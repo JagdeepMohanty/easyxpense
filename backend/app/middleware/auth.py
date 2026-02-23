@@ -1,1 +1,28 @@
-from functools import wraps\nfrom flask import request, jsonify, current_app\nimport jwt\n\ndef auth_required(f):\n    @wraps(f)\n    def decorated_function(*args, **kwargs):\n        token = request.headers.get('Authorization')\n        if not token or not token.startswith('Bearer '):\n            return jsonify({'error': 'Authorization token required'}), 401\n        \n        try:\n            token = token.split(' ')[1]\n            payload = jwt.decode(token, current_app.config['JWT_SECRET_KEY'], algorithms=['HS256'])\n            request.user_id = payload['user_id']\n        except jwt.ExpiredSignatureError:\n            return jsonify({'error': 'Token has expired'}), 401\n        except jwt.InvalidTokenError:\n            return jsonify({'error': 'Invalid token'}), 401\n        \n        return f(*args, **kwargs)\n    return decorated_function
+from functools import wraps
+from flask import request, jsonify, current_app
+import jwt
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth_header = request.headers.get("Authorization")
+        
+        if not auth_header:
+            return jsonify({"error": "Token missing"}), 401
+        
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(
+                token,
+                current_app.config["JWT_SECRET_KEY"],
+                algorithms=["HS256"]
+            )
+            request.user_id = payload["user_id"]
+        except jwt.ExpiredSignatureError:
+            return jsonify({"error": "Token expired"}), 401
+        except Exception:
+            return jsonify({"error": "Invalid token"}), 401
+        
+        return f(*args, **kwargs)
+    
+    return decorated

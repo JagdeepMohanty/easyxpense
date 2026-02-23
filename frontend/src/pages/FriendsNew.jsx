@@ -1,176 +1,226 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { friendsAPI } from '../services/api';
-import Header from '../components/Header';
-import InputBox from '../components/InputBox';
+import MainLayout from '../layouts/MainLayout';
+import EmptyState from '../components/ui/EmptyState';
+import Input from '../components/ui/Input';
 
-const Friends = () => {
+const FriendsNew = () => {
   const [friends, setFriends] = useState([]);
-  const [formData, setFormData] = useState({ name: '', phone: '' });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingFriend, setEditingFriend] = useState(null);
+  const [formData, setFormData] = useState({ name: '' });
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchFriends();
   }, []);
 
-  const fetchFriends = useCallback(async () => {
+  const fetchFriends = async () => {
     try {
       setLoading(true);
-      const response = await friendsAPI.getAll();
-      setFriends(response.data.data || []);
+      const response = await friendsAPI.getAll('', 1, 100);
+      setFriends(response.data.friends || []);
     } catch (err) {
-      setError('Failed to fetch friends');
+      // Silent fail
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
+
+    if (!formData.name.trim()) {
+      setError('Friend name is required');
+      return;
+    }
 
     try {
-      setLoading(true);
-      await friendsAPI.add({
-        name: formData.name.trim(),
-        phone: formData.phone.trim()
-      });
-      setFormData({ name: '', phone: '' });
-      setSuccess('Friend added successfully!');
-      await fetchFriends();
+      setSubmitting(true);
+      if (editingFriend) {
+        await friendsAPI.update(editingFriend._id, formData);
+      } else {
+        await friendsAPI.add(formData);
+      }
+      setShowAddModal(false);
+      setEditingFriend(null);
+      setFormData({ name: '' });
+      fetchFriends();
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to add friend');
+      setError(err.response?.data?.error || 'Operation failed');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  const handleDelete = async (friendId) => {
-    if (!confirm('Are you sure you want to delete this friend?')) return;
+  const handleEdit = (friend) => {
+    setEditingFriend(friend);
+    setFormData({ name: friend.name });
+    setShowAddModal(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this friend?')) return;
     
     try {
-      await friendsAPI.delete(friendId);
-      setSuccess('Friend deleted successfully!');
-      await fetchFriends();
+      await friendsAPI.delete(id);
+      fetchFriends();
     } catch (err) {
-      setError('Failed to delete friend');
+      alert('Failed to delete friend');
     }
   };
 
-  return (
-    <div>
-      <Header title="Friends" />
-      
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
-          <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md">
-            <h2 className="text-xl font-semibold text-textPrimary dark:text-textPrimary-dark mb-6">Add New Friend</h2>
-            
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
-                {error}
-              </div>
-            )}
-            
-            {success && (
-              <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-600 dark:text-green-400 text-sm">
-                {success}
-              </div>
-            )}
+  const filteredFriends = friends.filter(f => 
+    f.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <InputBox
-                label="Friend's Name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                placeholder="e.g., John Doe"
-                required
-              />
-              
-              <InputBox
-                label="Phone Number"
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                placeholder="e.g., 9876543210"
-                helper="10-digit Indian mobile number"
-                required
-              />
-              
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all shadow-md"
-              >
-                {loading ? 'Adding Friend...' : 'Add Friend'}
-              </button>
-            </form>
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      </MainLayout>
+    );
+  }
+
+  return (
+    <MainLayout>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-textPrimary dark:text-textPrimary-dark">Friends</h1>
+            <p className="text-textSecondary dark:text-textSecondary-dark mt-1">Manage your friends list</p>
           </div>
+          <button
+            onClick={() => {
+              setEditingFriend(null);
+              setFormData({ name: '' });
+              setShowAddModal(true);
+            }}
+            className="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors"
+          >
+            + Add Friend
+          </button>
         </div>
 
-        <div className="lg:col-span-2">
-          <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-textPrimary dark:text-textPrimary-dark">Your Friends</h2>
-              <div className="text-sm text-textSecondary dark:text-textSecondary-dark">
-                {friends.length} {friends.length === 1 ? 'friend' : 'friends'}
-              </div>
-            </div>
+        {friends.length > 0 && (
+          <Input
+            placeholder="Search friends..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        )}
 
-            {loading && friends.length === 0 ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mr-3"></div>
-                <span className="text-textSecondary dark:text-textSecondary-dark">Loading friends...</span>
-              </div>
-            ) : friends.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">👥</div>
-                <div className="text-xl font-semibold text-textPrimary dark:text-textPrimary-dark mb-2">No friends yet</div>
-                <div className="text-textSecondary dark:text-textSecondary-dark max-w-md mx-auto">
-                  Add friends to start splitting expenses and tracking who owes what.
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {friends.map(friend => (
-                  <div key={friend._id} className="p-4 bg-background dark:bg-background-dark rounded-lg hover:bg-primary/5 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-white font-semibold text-lg">
-                            {friend.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold text-textPrimary dark:text-textPrimary-dark truncate">{friend.name}</h3>
-                          <p className="text-sm text-textSecondary dark:text-textSecondary-dark truncate">{friend.phone || friend.email}</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleDelete(friend._id)}
-                        className="text-red-500 hover:text-red-700 transition-colors p-2"
-                      >
-                        🗑️
-                      </button>
+        {friends.length === 0 ? (
+          <EmptyState
+            icon="👥"
+            title="No friends yet"
+            description="Add your first friend to start splitting expenses"
+            action={() => setShowAddModal(true)}
+            actionLabel="Add First Friend"
+          />
+        ) : filteredFriends.length === 0 ? (
+          <EmptyState
+            icon="🔍"
+            title="No results found"
+            description={`No friends match "${searchTerm}"`}
+          />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredFriends.map(friend => (
+              <div key={friend._id} className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700 hover:border-primary transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                      <span className="text-primary font-bold text-lg">
+                        {friend.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-textPrimary dark:text-textPrimary-dark">{friend.name}</h3>
+                      <p className="text-sm text-textSecondary dark:text-textSecondary-dark">Friend</p>
                     </div>
                   </div>
-                ))}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(friend)}
+                      className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(friend._id)}
+                      className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
-            )}
+            ))}
           </div>
-        </div>
+        )}
+
+        {/* Add/Edit Modal */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-card dark:bg-card-dark rounded-xl p-6 max-w-md w-full">
+              <h2 className="text-2xl font-bold text-textPrimary dark:text-textPrimary-dark mb-6">
+                {editingFriend ? 'Edit Friend' : 'Add Friend'}
+              </h2>
+              
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <Input
+                  label="Friend Name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="John Doe"
+                  required
+                />
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setEditingFriend(null);
+                      setFormData({ name: '' });
+                      setError('');
+                    }}
+                    className="flex-1 h-11 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-textPrimary dark:text-textPrimary-dark font-medium rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 h-11 bg-primary hover:bg-primary/90 disabled:bg-gray-300 text-white font-medium rounded-lg transition-colors"
+                  >
+                    {submitting ? 'Saving...' : editingFriend ? 'Update' : 'Add'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </MainLayout>
   );
 };
 
-export default Friends;
+export default FriendsNew;

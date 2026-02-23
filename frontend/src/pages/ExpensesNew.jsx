@@ -1,178 +1,203 @@
-import React, { useState, useEffect } from 'react';
-import { expensesAPI, friendsAPI } from '../services/api';
-import Header from '../components/Header';
-import InputBox from '../components/InputBox';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { expensesAPI } from '../services/api';
+import { formatCurrency } from '../utils/currency';
+import MainLayout from '../layouts/MainLayout';
+import EmptyState from '../components/ui/EmptyState';
+import Input from '../components/ui/Input';
 
-const Expenses = () => {
-  const [formData, setFormData] = useState({
-    amount: '',
-    description: '',
-    category: '',
-    date: new Date().toISOString().split('T')[0],
-    selectedFriends: []
-  });
-  const [friends, setFriends] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+const ExpensesNew = () => {
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchFriends();
-  }, []);
+    fetchExpenses();
+  }, [page]);
 
-  const fetchFriends = async () => {
+  const fetchExpenses = async () => {
     try {
-      const response = await friendsAPI.getAll();
-      setFriends(response.data.data || []);
+      setLoading(true);
+      const response = await expensesAPI.getAll(searchTerm, page, 10);
+      setExpenses(response.data.data || []);
+      setTotalPages(response.data.totalPages || 1);
     } catch (err) {
-      console.error('Failed to fetch friends');
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleFriendSelect = (friendId) => {
-    setFormData(prev => ({
-      ...prev,
-      selectedFriends: prev.selectedFriends.includes(friendId)
-        ? prev.selectedFriends.filter(id => id !== friendId)
-        : [...prev.selectedFriends, friendId]
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      await expensesAPI.create({
-        amount: parseFloat(formData.amount),
-        description: formData.description,
-        category: formData.category,
-        date: formData.date,
-        friends: formData.selectedFriends
-      });
-      
-      setSuccess('Expense added successfully!');
-      setFormData({
-        amount: '',
-        description: '',
-        category: '',
-        date: new Date().toISOString().split('T')[0],
-        selectedFriends: []
-      });
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to add expense');
+      setExpenses([]);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSearch = () => {
+    setPage(1);
+    fetchExpenses();
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this expense?')) return;
+    
+    try {
+      await expensesAPI.delete(id);
+      fetchExpenses();
+    } catch (err) {
+      alert('Failed to delete expense');
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  // Memoized total calculation
+  const totalExpenses = useMemo(() => 
+    expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0),
+    [expenses]
+  );
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
-    <div>
-      <Header title="Add Expense" />
-      
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-lg">
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
-              {error}
-            </div>
-          )}
-          
-          {success && (
-            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-600 dark:text-green-400 text-sm">
-              {success}
-            </div>
-          )}
+    <MainLayout>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-textPrimary dark:text-textPrimary-dark">Expenses</h1>
+            <p className="text-textSecondary dark:text-textSecondary-dark mt-1">
+              Total: {formatCurrency(totalExpenses)}
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/expenses/add')}
+            className="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors"
+          >
+            + Add Expense
+          </button>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <InputBox
-                label="Amount"
-                type="number"
-                name="amount"
-                value={formData.amount}
-                onChange={handleInputChange}
-                placeholder="0.00"
-                required
-              />
-              
-              <InputBox
-                label="Category"
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                placeholder="Food, Transport, etc."
-                required
-              />
-            </div>
-
-            <InputBox
-              label="Description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="What was this expense for?"
-              required
+        {expenses.length > 0 && (
+          <div className="flex gap-2">
+            <Input
+              placeholder="Search expenses..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             />
+            <button
+              onClick={handleSearch}
+              className="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors whitespace-nowrap"
+            >
+              Search
+            </button>
+          </div>
+        )}
 
-            <InputBox
-              label="Date"
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleInputChange}
-              required
-            />
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-textPrimary dark:text-textPrimary-dark">
-                Split with Friends
-              </label>
-              <div className="bg-background dark:bg-background-dark border border-primary/20 rounded-lg p-4 max-h-48 overflow-y-auto">
-                {friends.length === 0 ? (
-                  <p className="text-textSecondary dark:text-textSecondary-dark text-sm">No friends available</p>
-                ) : (
-                  <div className="space-y-2">
-                    {friends.map(friend => (
-                      <label key={friend._id} className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.selectedFriends.includes(friend._id)}
-                          onChange={() => handleFriendSelect(friend._id)}
-                          className="w-4 h-4 text-primary bg-background dark:bg-background-dark border-primary/20 rounded focus:ring-primary focus:ring-2"
-                        />
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                            {friend.name.charAt(0).toUpperCase()}
-                          </div>
-                          <span className="text-textPrimary dark:text-textPrimary-dark">{friend.name}</span>
-                        </div>
-                      </label>
+        {expenses.length === 0 ? (
+          <EmptyState
+            icon="💰"
+            title="No expenses yet"
+            description="Start tracking your expenses by adding your first one"
+            action={() => navigate('/expenses/add')}
+            actionLabel="Add First Expense"
+          />
+        ) : (
+          <>
+            <div className="bg-card dark:bg-card-dark rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-textSecondary dark:text-textSecondary-dark uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-textSecondary dark:text-textSecondary-dark uppercase tracking-wider">
+                        Description
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-textSecondary dark:text-textSecondary-dark uppercase tracking-wider">
+                        Category
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-textSecondary dark:text-textSecondary-dark uppercase tracking-wider">
+                        Amount
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-textSecondary dark:text-textSecondary-dark uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {expenses.map((expense) => (
+                      <tr key={expense._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-textPrimary dark:text-textPrimary-dark">
+                          {formatDate(expense.date || expense.created_at)}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-medium text-textPrimary dark:text-textPrimary-dark">
+                          {expense.description}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                            {expense.category}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-primary">
+                          {formatCurrency(expense.amount)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                          <button
+                            onClick={() => handleDelete(expense._id)}
+                            className="text-red-500 hover:text-red-700 transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
                     ))}
-                  </div>
-                )}
+                  </tbody>
+                </table>
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all shadow-md"
-            >
-              {loading ? 'Adding Expense...' : 'Add Expense'}
-            </button>
-          </form>
-        </div>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-4 py-2 bg-card dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Previous
+                </button>
+                <span className="px-4 py-2 text-textPrimary dark:text-textPrimary-dark">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-4 py-2 bg-card dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
-    </div>
+    </MainLayout>
   );
 };
 
-export default Expenses;
+export default React.memo(ExpensesNew);

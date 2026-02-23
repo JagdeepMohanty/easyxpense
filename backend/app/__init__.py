@@ -1,47 +1,24 @@
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify
 from flask_cors import CORS
-from pymongo import MongoClient
-import os
-import logging
+from dotenv import load_dotenv
+from .config import Config
+from .extensions import init_db
 
-# Global MongoDB client
-mongo_client = None
+load_dotenv()
 
-def create_app(config_name=None):
-    global mongo_client
-    
+def create_app():
     app = Flask(__name__)
-    
-    # Load environment variables
-    app.config['MONGO_URI'] = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/easyxpense')
-    app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
-    app.config['DEBUG'] = os.environ.get('FLASK_ENV') == 'development'
-    app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB
-    
-    if not app.config['JWT_SECRET_KEY']:
-        raise ValueError('JWT_SECRET_KEY environment variable is required')
+    app.config.from_object(Config)
     
     # CORS configuration
     CORS(app, 
          origins=['https://easyxpense.netlify.app', 'http://localhost:3000', 'http://localhost:5173'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-         allow_headers=['Content-Type', 'Authorization'],
-         supports_credentials=False)
+         allow_headers=['Content-Type', 'Authorization'])
     
-    # MongoDB connection with connection pooling
+    # Initialize MongoDB
     try:
-        if mongo_client is None:
-            mongo_client = MongoClient(
-                app.config['MONGO_URI'],
-                serverSelectionTimeoutMS=5000,
-                maxPoolSize=50,
-                minPoolSize=10,
-                maxIdleTimeMS=30000,
-                connectTimeoutMS=10000
-            )
-        app.db = mongo_client['EasyXpense']
-        app.db.command('ping')
-        app.logger.info('MongoDB connected successfully with connection pooling')
+        init_db(app)
     except Exception as e:
         app.logger.error(f'MongoDB connection failed: {e}')
         raise
@@ -56,47 +33,34 @@ def create_app(config_name=None):
     
     # Register blueprints
     from app.routes.auth import auth_bp
-    from app.routes.friends import friends_bp
-    from app.routes.expenses import expenses_bp
+    from app.routes.users import users_bp
     from app.routes.groups import groups_bp
-    from app.routes.analytics import analytics_bp
-    from app.routes.health import health_bp
+    from app.routes.expenses import expenses_bp
     from app.routes.debts import debts_bp
-    from app.routes.settlements import settlements_bp
     
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
-    app.register_blueprint(friends_bp, url_prefix='/api/friends')
-    app.register_blueprint(expenses_bp, url_prefix='/api/expenses')
-    app.register_blueprint(groups_bp, url_prefix='/api/groups')
-    app.register_blueprint(analytics_bp, url_prefix='/api/analytics')
-    app.register_blueprint(health_bp, url_prefix='/api')
-    app.register_blueprint(debts_bp, url_prefix='/api/debts')
-    app.register_blueprint(settlements_bp, url_prefix='/api/settlements')
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(users_bp, url_prefix="/api/users")
+    app.register_blueprint(groups_bp, url_prefix="/api/groups")
+    app.register_blueprint(expenses_bp, url_prefix="/api/expenses")
+    app.register_blueprint(debts_bp, url_prefix="/api/debts")
     
-    # Health endpoint (also at root for monitoring)
-    @app.route('/health')
+    # Health check endpoint
+    @app.route("/api/health")
+    @app.route("/health")
     def health():
         try:
-            # Check MongoDB connection
             app.db.command('ping')
-            return jsonify({
-                'status': 'healthy',
-                'database': 'connected'
-            }), 200
+            return jsonify({"status": "ok", "database": "connected"}), 200
         except Exception as e:
-            return jsonify({
-                'status': 'unhealthy',
-                'database': 'disconnected',
-                'error': str(e)
-            }), 503
+            return jsonify({"status": "error", "database": "disconnected"}), 503
     
     # Error handlers
     @app.errorhandler(404)
     def not_found(error):
-        return jsonify({'error': 'Endpoint not found'}), 404
+        return jsonify({"error": "Endpoint not found"}), 404
     
     @app.errorhandler(500)
     def internal_error(error):
-        return jsonify({'error': 'Internal server error'}), 500
+        return jsonify({"error": "Internal server error"}), 500
     
     return app

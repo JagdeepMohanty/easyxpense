@@ -1,117 +1,52 @@
-import { lazy, Suspense } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import ProtectedRoute from '../components/ProtectedRoute';
-import MainLayout from '../layouts/MainLayout';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 // Lazy load pages for better performance
-const Dashboard = lazy(() => import('../features/dashboard/DashboardNew'));
-const Expenses = lazy(() => import('../features/expenses/ExpensesNew'));
-const Friends = lazy(() => import('../features/friends/FriendsNew'));
-const Groups = lazy(() => import('../features/groups/GroupsNew'));
-const DebtTracker = lazy(() => import('../pages/DebtTracker'));
-const PaymentHistory = lazy(() => import('../pages/PaymentHistory'));
+const Home = lazy(() => import('../pages/Home'));
 const Login = lazy(() => import('../pages/Login'));
 const Register = lazy(() => import('../pages/Register'));
+const DashboardNew = lazy(() => import('../pages/DashboardNew'));
+const ExpensesNew = lazy(() => import('../pages/ExpensesNew'));
+const AddExpense = lazy(() => import('../pages/AddExpense'));
+const FriendsNew = lazy(() => import('../pages/FriendsNew'));
+const GroupsNew = lazy(() => import('../pages/GroupsNew'));
+const DebtTracker = lazy(() => import('../pages/DebtTracker'));
+const PaymentHistory = lazy(() => import('../pages/PaymentHistory'));
 
-/**
- * AppRoutes - Central route configuration for the application
- * Uses React Router v7 structure with lazy loading
- */
-function AppRoutes() {
+// Loading component
+const LoadingFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background dark:bg-background-dark">
+    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
+
+const AppRoutes = () => {
+  const { isAuthenticated } = useAuth();
+
   return (
-    <Suspense fallback={<LoadingSpinner />}>
+    <Suspense fallback={<LoadingFallback />}>
       <Routes>
-        {/* Public routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        
-        {/* Redirect root to dashboard */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        
-        {/* Protected routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <Dashboard />
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/add-expense"
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <Expenses />
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/expenses"
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <Expenses />
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/friends"
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <Friends />
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/groups"
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <Groups />
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/debts"
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <DebtTracker />
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/history"
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <PaymentHistory />
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        />
-        
-        {/* Catch-all redirect */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        {/* Public Routes */}
+        <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Home />} />
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
+        <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />} />
+
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardNew /></ProtectedRoute>} />
+        <Route path="/expenses" element={<ProtectedRoute><ExpensesNew /></ProtectedRoute>} />
+        <Route path="/expenses/add" element={<ProtectedRoute><AddExpense /></ProtectedRoute>} />
+        <Route path="/friends" element={<ProtectedRoute><FriendsNew /></ProtectedRoute>} />
+        <Route path="/groups" element={<ProtectedRoute><GroupsNew /></ProtectedRoute>} />
+        <Route path="/debts" element={<ProtectedRoute><DebtTracker /></ProtectedRoute>} />
+        <Route path="/payments" element={<ProtectedRoute><PaymentHistory /></ProtectedRoute>} />
+
+        {/* Catch all */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
   );
-}
+};
 
 export default AppRoutes;

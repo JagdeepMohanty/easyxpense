@@ -1,39 +1,28 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 
 const EmptyState = ({ 
-  icon = '📊', 
-  title = 'No data yet', 
+  icon = '📭', 
+  title = 'No data found', 
   description = 'Get started by adding your first item',
-  actionText,
-  actionLink,
-  onAction
+  action,
+  actionLabel = 'Add New'
 }) => {
   return (
-    <div className="text-center py-16 px-6 animate-fade-in">
-      <div className="text-6xl mb-4 opacity-50 animate-scale-in">{icon}</div>
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+    <div className="flex flex-col items-center justify-center py-12 px-4">
+      <div className="text-6xl mb-4">{icon}</div>
+      <h3 className="text-xl font-semibold text-textPrimary dark:text-textPrimary-dark mb-2">
         {title}
       </h3>
-      <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+      <p className="text-textSecondary dark:text-textSecondary-dark text-center mb-6 max-w-md">
         {description}
       </p>
-      {(actionText && (actionLink || onAction)) && (
-        actionLink ? (
-          <Link
-            to={actionLink}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl transition-all shadow-soft"
-          >
-            {actionText}
-          </Link>
-        ) : (
-          <button
-            onClick={onAction}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl transition-all shadow-soft"
-          >
-            {actionText}
-          </button>
-        )
+      {action && (
+        <button
+          onClick={action}
+          className="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors"
+        >
+          {actionLabel}
+        </button>
       )}
     </div>
   );
