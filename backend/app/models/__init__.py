@@ -1,1 +1,57 @@
-from datetime import datetime\nfrom bson import ObjectId\n\nclass User:\n    def __init__(self, name, email=None, phone=None, password=None):\n        self.name = name\n        self.email = email\n        self.phone = phone\n        self.password = password\n        self.created_at = datetime.utcnow()\n    \n    def to_dict(self):\n        return {\n            'name': self.name,\n            'email': self.email,\n            'phone': self.phone,\n            'password': self.password,\n            'created_at': self.created_at\n        }\n\nclass Friend:\n    def __init__(self, user_id, name, phone=None, email=None):\n        self.user_id = user_id\n        self.name = name\n        self.phone = phone\n        self.email = email\n        self.created_at = datetime.utcnow()\n    \n    def to_dict(self):\n        return {\n            'user_id': self.user_id,\n            'name': self.name,\n            'phone': self.phone,\n            'email': self.email,\n            'created_at': self.created_at\n        }\n\nclass Expense:\n    def __init__(self, user_id, amount, description, category, date=None, friends=None):\n        self.user_id = user_id\n        self.amount = amount\n        self.description = description\n        self.category = category\n        self.date = date or datetime.utcnow()\n        self.friends = friends or []\n        self.created_at = datetime.utcnow()\n    \n    def to_dict(self):\n        return {\n            'user_id': self.user_id,\n            'amount': self.amount,\n            'description': self.description,\n            'category': self.category,\n            'date': self.date,\n            'friends': self.friends,\n            'created_at': self.created_at\n        }
+from datetime import datetime
+from bson import ObjectId
+
+class User:
+    def __init__(self, name, email=None, phone=None, password=None):
+        self.name = name
+        self.email = email
+        self.phone = phone
+        self.password = password
+        self.created_at = datetime.utcnow()
+    
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'email': self.email,
+            'phone': self.phone,
+            'password': self.password,
+            'created_at': self.created_at
+        }
+
+class Friend:
+    def __init__(self, user_id, name, phone=None, email=None):
+        self.user_id = user_id
+        self.name = name
+        self.phone = phone
+        self.email = email
+        self.created_at = datetime.utcnow()
+    
+    def to_dict(self):
+        return {
+            'user_id': self.user_id,
+            'name': self.name,
+            'phone': self.phone,
+            'email': self.email,
+            'created_at': self.created_at
+        }
+
+class Expense:
+    def __init__(self, user_id, amount, description, category, date=None, friends=None):
+        self.user_id = user_id
+        self.amount = amount
+        self.description = description
+        self.category = category
+        self.date = date or datetime.utcnow()
+        self.friends = friends or []
+        self.created_at = datetime.utcnow()
+    
+    def to_dict(self):
+        return {
+            'user_id': self.user_id,
+            'amount': self.amount,
+            'description': self.description,
+            'category': self.category,
+            'date': self.date,
+            'friends': self.friends,
+            'created_at': self.created_at
+        }
