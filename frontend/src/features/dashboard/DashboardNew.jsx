@@ -3,35 +3,40 @@ import { Link } from 'react-router-dom';
 import { analyticsAPI, expensesAPI, friendsAPI } from '../../services/api';
 import { formatCurrency } from '../../utils/currency';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import Header from '../../components/Header';
+import { useAuth } from '../../context/AuthContext';
 
 const CHART_COLORS = ['#10B981', '#34D399', '#6EE7B7'];
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [monthlyData, setMonthlyData] = useState([]);
   const [categoryData, setCategoryData] = useState([]);
   const [expenses, setExpenses] = useState([]);
-  const [friends, setFriends] = useState([]);
-  const [totalExpense, setTotalExpense] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const youOwe = 1250;
+  const youAreOwed = 3400;
+  const netBalance = youAreOwed - youOwe;
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Good Afternoon';
+    return 'Good Evening';
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [monthlyRes, categoryRes, expensesRes, friendsRes] = await Promise.all([
+        const [monthlyRes, categoryRes, expensesRes] = await Promise.all([
           analyticsAPI.getMonthlySummary(6),
           analyticsAPI.getCategoryBreakdown(),
-          expensesAPI.getAll(null, 1, 10),
-          friendsAPI.getAll(null, 1, 100)
+          expensesAPI.getAll(null, 1, 10)
         ]);
 
         setMonthlyData(monthlyRes.data.data || []);
         setCategoryData(categoryRes.data.data || []);
         setExpenses(expensesRes.data.data || []);
-        setFriends(friendsRes.data.data || []);
-        
-        const total = (monthlyRes.data.data || []).reduce((sum, m) => sum + (m.amount || 0), 0);
-        setTotalExpense(total);
       } catch (err) {
         // Handle error silently
       } finally {
@@ -44,68 +49,84 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mr-3"></div>
-        <div className="text-textPrimary dark:text-textPrimary-dark">Loading...</div>
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <div className="h-8 w-64 bg-card dark:bg-card-dark rounded animate-pulse"></div>
+          <div className="h-4 w-48 bg-card dark:bg-card-dark rounded animate-pulse"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-32 bg-card dark:bg-card-dark rounded-xl animate-pulse"></div>
+          ))}
+        </div>
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 h-96 bg-card dark:bg-card-dark rounded-xl animate-pulse"></div>
+          <div className="h-96 bg-card dark:bg-card-dark rounded-xl animate-pulse"></div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <Header title="Dashboard" />
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
-        <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md">
-          <h3 className="text-sm font-medium text-textSecondary dark:text-textSecondary-dark mb-2">Total Balance</h3>
-          <p className="text-2xl font-bold text-textPrimary dark:text-textPrimary-dark">{formatCurrency(totalExpense)}</p>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold text-textPrimary dark:text-textPrimary-dark">
+          {getGreeting()}, {user?.name} 👋
+        </h1>
+        <p className="text-sm text-textSecondary dark:text-textSecondary-dark mt-1">
+          Here's your balance overview
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-gradient-to-br from-red-500/10 to-red-600/5 dark:from-red-500/20 dark:to-red-600/10 rounded-xl p-6 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+          <h3 className="text-sm font-medium text-textSecondary dark:text-textSecondary-dark mb-2">You Owe</h3>
+          <p className="text-3xl font-semibold text-red-500">{formatCurrency(youOwe)}</p>
         </div>
-        
-        <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md">
-          <h3 className="text-sm font-medium text-textSecondary dark:text-textSecondary-dark mb-2">Total Expenses</h3>
-          <p className="text-2xl font-bold text-textPrimary dark:text-textPrimary-dark">{formatCurrency(totalExpense)}</p>
+
+        <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 dark:from-emerald-500/20 dark:to-emerald-600/10 rounded-xl p-6 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+          <h3 className="text-sm font-medium text-textSecondary dark:text-textSecondary-dark mb-2">You Are Owed</h3>
+          <p className="text-3xl font-semibold text-emerald-500">{formatCurrency(youAreOwed)}</p>
         </div>
-        
-        <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md">
-          <h3 className="text-sm font-medium text-textSecondary dark:text-textSecondary-dark mb-2">This Month</h3>
-          <p className="text-2xl font-bold text-textPrimary dark:text-textPrimary-dark">{formatCurrency(monthlyData[monthlyData.length - 1]?.amount || 0)}</p>
-        </div>
-        
-        <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md">
-          <h3 className="text-sm font-medium text-textSecondary dark:text-textSecondary-dark mb-2">Friends</h3>
-          <p className="text-2xl font-bold text-primary">{friends.length}</p>
+
+        <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 dark:from-blue-500/20 dark:to-blue-600/10 rounded-xl p-6 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+          <h3 className="text-sm font-medium text-textSecondary dark:text-textSecondary-dark mb-2">Net Balance</h3>
+          <p className={`text-3xl font-semibold ${netBalance >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+            {formatCurrency(netBalance)}
+          </p>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6 mb-8">
-        <div className="lg:col-span-2 bg-card dark:bg-card-dark rounded-xl p-6 shadow-md">
-          <h2 className="text-xl font-bold text-textPrimary dark:text-textPrimary-dark mb-6">Monthly Expense Chart</h2>
+      <div className="grid lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-card dark:bg-card-dark rounded-xl p-6 shadow-lg">
+          <h2 className="text-lg font-medium text-textPrimary dark:text-textPrimary-dark mb-6">Monthly Expenses</h2>
           {monthlyData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-700" />
-                <XAxis dataKey="month" stroke="#64748b" className="dark:stroke-slate-400" />
-                <YAxis stroke="#64748b" className="dark:stroke-slate-400" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
+                <XAxis dataKey="month" stroke="#9CA3AF" fontSize={12} />
+                <YAxis stroke="#9CA3AF" fontSize={12} />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#0F172A', 
-                    border: '1px solid #10B981',
+                    backgroundColor: '#1F2937', 
+                    border: 'none',
                     borderRadius: '8px',
-                    color: '#E2E8F0'
+                    color: '#E5E7EB'
                   }}
                 />
-                <Bar dataKey="amount" fill="#10B981" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="amount" fill="#10B981" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-[300px] flex items-center justify-center text-textSecondary dark:text-textSecondary-dark">
-              No expense data yet
+            <div className="h-[300px] flex flex-col items-center justify-center">
+              <p className="text-textPrimary dark:text-textPrimary-dark font-medium mb-1">No expense data yet</p>
+              <p className="text-sm text-textSecondary dark:text-textSecondary-dark">Add your first expense to get started</p>
             </div>
           )}
         </div>
 
-        <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md">
-          <h2 className="text-lg font-bold text-textPrimary dark:text-textPrimary-dark mb-4">Category Breakdown</h2>
+        <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-lg">
+          <h2 className="text-lg font-medium text-textPrimary dark:text-textPrimary-dark mb-6">Categories</h2>
           {categoryData.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
@@ -124,88 +145,54 @@ const Dashboard = () => {
                 </Pie>
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#0F172A', 
-                    border: '1px solid #10B981',
+                    backgroundColor: '#1F2937', 
+                    border: 'none',
                     borderRadius: '8px',
-                    color: '#E2E8F0'
+                    color: '#E5E7EB'
                   }}
                 />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-[200px] flex items-center justify-center text-textSecondary dark:text-textSecondary-dark text-sm">
-              No categories yet
+            <div className="h-[200px] flex flex-col items-center justify-center">
+              <p className="text-textPrimary dark:text-textPrimary-dark font-medium mb-1">No categories yet</p>
+              <p className="text-sm text-textSecondary dark:text-textSecondary-dark">Add expenses to see breakdown</p>
             </div>
           )}
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md">
-          <h2 className="text-xl font-bold text-textPrimary dark:text-textPrimary-dark mb-6">Recent Expenses</h2>
-          {expenses.length > 0 ? (
-            <div className="space-y-3">
-              {expenses.slice(0, 5).map((expense, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 bg-background dark:bg-background-dark rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                      <span className="text-white text-sm">💰</span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-textPrimary dark:text-textPrimary-dark">{expense.description}</p>
-                      <p className="text-sm text-textSecondary dark:text-textSecondary-dark">{expense.payer}</p>
-                    </div>
+      <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-lg">
+        <h2 className="text-lg font-medium text-textPrimary dark:text-textPrimary-dark mb-6">Recent Activity</h2>
+        {expenses.length > 0 ? (
+          <div className="space-y-4">
+            {expenses.slice(0, 5).map((expense, idx) => (
+              <div key={idx}>
+                <div className="flex items-center justify-between py-3">
+                  <div>
+                    <p className="text-sm font-medium text-textPrimary dark:text-textPrimary-dark">{expense.description}</p>
+                    <p className="text-xs text-textSecondary dark:text-textSecondary-dark mt-1">
+                      {expense.payer} paid {formatCurrency(expense.amount)}
+                    </p>
                   </div>
-                  <span className="font-bold text-primary">{formatCurrency(expense.amount)}</span>
+                  <span className="text-sm font-medium text-emerald-500">{formatCurrency(expense.amount)}</span>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <div className="text-4xl mb-2">💰</div>
-              <p className="text-textSecondary dark:text-textSecondary-dark mb-4">No expenses yet</p>
-              <Link
-                to="/add-expense"
-                className="inline-block px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-              >
-                Add Expense
-              </Link>
-            </div>
-          )}
-        </div>
-
-        <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md">
-          <h2 className="text-xl font-bold text-textPrimary dark:text-textPrimary-dark mb-6">Friends</h2>
-          {friends.length > 0 ? (
-            <div className="space-y-3">
-              {friends.slice(0, 5).map((friend) => (
-                <div key={friend._id} className="flex items-center justify-between p-3 bg-background dark:bg-background-dark rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold">
-                      {friend.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-medium text-textPrimary dark:text-textPrimary-dark">{friend.name}</p>
-                      <p className="text-sm text-textSecondary dark:text-textSecondary-dark">Friend</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <div className="text-4xl mb-2">👥</div>
-              <p className="text-textPrimary dark:text-textPrimary-dark font-medium mb-1">You don't have any friends yet</p>
-              <p className="text-textSecondary dark:text-textSecondary-dark text-sm mb-4">Add friends to start splitting expenses.</p>
-              <Link
-                to="/friends"
-                className="inline-block px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-              >
-                Add Friends
-              </Link>
-            </div>
-          )}
-        </div>
+                {idx < expenses.length - 1 && <div className="border-t border-slate-700/40"></div>}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-textPrimary dark:text-textPrimary-dark font-medium mb-1">No expenses yet</p>
+            <p className="text-sm text-textSecondary dark:text-textSecondary-dark mb-6">Add your first expense to get started</p>
+            <Link
+              to="/add-expense"
+              className="inline-block px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-all duration-200"
+            >
+              Add Expense
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
