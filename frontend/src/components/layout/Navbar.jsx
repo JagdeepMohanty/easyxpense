@@ -28,27 +28,25 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="bg-card dark:bg-card-dark border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95">
+    <nav className="bg-surface dark:bg-surface-dark border-b border-gray-200/10 dark:border-gray-700/30 sticky top-0 z-50 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
           <Link to="/dashboard" className="flex items-center space-x-2">
-            <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <span className="text-2xl font-semibold bg-gradient-to-r from-emerald-500 to-emerald-400 bg-clip-text text-transparent">
               EasyXpense
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-1">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
                 className={`
-                  px-3 py-2 rounded-lg text-sm font-medium transition-all
+                  px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
                   ${isActive(link.path)
-                    ? 'bg-primary text-white'
-                    : 'text-textSecondary dark:text-textSecondary-dark hover:bg-primary/10 hover:text-primary'
+                    ? 'bg-emerald-500 text-white'
+                    : 'text-textSecondary dark:text-textSecondary-dark hover:bg-emerald-500/10 hover:text-emerald-500'
                   }
                 `}
               >
@@ -58,24 +56,21 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Right Section */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="p-2 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200"
               aria-label="Toggle theme"
             >
               {isDark ? '🌞' : '🌙'}
             </button>
 
-            {/* Profile Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200"
               >
-                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-semibold">
+                <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                   {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
                 <span className="text-sm font-medium text-textPrimary dark:text-textPrimary-dark">
@@ -89,14 +84,14 @@ const Navbar = () => {
               {profileOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setProfileOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-48 bg-card dark:bg-card-dark rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-20">
-                    <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                  <div className="absolute right-0 mt-2 w-48 bg-card dark:bg-card-dark rounded-xl shadow-lg py-1 z-20">
+                    <div className="px-4 py-3 border-b border-gray-200/10 dark:border-gray-700/30">
                       <p className="text-sm font-medium text-textPrimary dark:text-textPrimary-dark">{user?.name}</p>
                       <p className="text-xs text-textSecondary dark:text-textSecondary-dark">{user?.email || user?.phone}</p>
                     </div>
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
                     >
                       🚪 Logout
                     </button>
@@ -106,17 +101,16 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-2">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="p-2 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
             >
               {isDark ? '🌞' : '🌙'}
             </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="p-2 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {mobileMenuOpen ? (
@@ -129,9 +123,8 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="md:hidden py-4 border-t border-gray-200/10 dark:border-gray-700/30">
             <div className="space-y-1">
               {navLinks.map((link) => (
                 <Link
@@ -139,10 +132,10 @@ const Navbar = () => {
                   to={link.path}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`
-                    block px-4 py-2 rounded-lg text-sm font-medium transition-all
+                    block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
                     ${isActive(link.path)
-                      ? 'bg-primary text-white'
-                      : 'text-textSecondary dark:text-textSecondary-dark hover:bg-primary/10'
+                      ? 'bg-emerald-500 text-white'
+                      : 'text-textSecondary dark:text-textSecondary-dark hover:bg-emerald-500/10'
                     }
                   `}
                 >
@@ -150,14 +143,14 @@ const Navbar = () => {
                   {link.label}
                 </Link>
               ))}
-              <div className="border-t border-gray-200 dark:border-gray-700 my-2 pt-2">
+              <div className="border-t border-gray-200/10 dark:border-gray-700/30 my-2 pt-2">
                 <div className="px-4 py-2">
                   <p className="text-sm font-medium text-textPrimary dark:text-textPrimary-dark">{user?.name}</p>
                   <p className="text-xs text-textSecondary dark:text-textSecondary-dark">{user?.email || user?.phone}</p>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                  className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
                 >
                   🚪 Logout
                 </button>

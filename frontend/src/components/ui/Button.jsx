@@ -11,19 +11,19 @@ const Button = React.memo(({
   as: Component = 'button',
   ...props 
 }) => {
-  const baseClasses = 'font-semibold rounded-lg shadow-md transition-all duration-200 flex items-center gap-2 justify-center';
+  const baseClasses = 'font-medium rounded-lg transition-all duration-200 flex items-center gap-2 justify-center';
   
   const variantClasses = {
-    primary: 'bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 text-black hover:shadow-emerald-500/30',
-    secondary: 'bg-[#0F172A] border border-emerald-500/20 text-textPrimary hover:border-emerald-400/40 hover:bg-emerald-500/5',
+    primary: 'bg-emerald-500 hover:bg-emerald-600 text-white',
+    secondary: 'bg-slate-700 hover:bg-slate-600 text-white',
     success: 'bg-emerald-600 hover:bg-emerald-500 text-white',
     danger: 'bg-red-600 hover:bg-red-500 text-white'
   };
   
   const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2',
-    lg: 'px-6 py-3 text-lg'
+    sm: 'px-3 py-2 text-sm h-9',
+    md: 'px-4 py-2 text-sm h-11',
+    lg: 'px-6 py-3 text-base h-12'
   };
 
   const classes = [
