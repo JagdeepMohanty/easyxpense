@@ -12,15 +12,10 @@
 
 body {
   font-family: 'Inter', system-ui, sans-serif;
-  background-color: #F8FAFC;
-  color: #0F172A;
+  background-color: #020617;
+  color: #E2E8F0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-body.dark {
-  background-color: #0B1220;
-  color: #E5E7EB;
 }
 
 #root {
@@ -37,7 +32,7 @@ body.dark {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #9CA3AF;
+  background: #94A3B8;
   border-radius: 4px;
 }
 

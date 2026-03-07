@@ -31,7 +31,7 @@ const Expenses = () => {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       </MainLayout>
     );
@@ -42,14 +42,14 @@ const Expenses = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-semibold text-textPrimary dark:text-textPrimary-dark">Expenses</h1>
-            <p className="text-sm text-textSecondary dark:text-textSecondary-dark mt-1">
+            <h1 className="text-2xl font-semibold text-text-main">Expenses</h1>
+            <p className="text-sm text-text-muted mt-1">
               Track and manage all your expenses
             </p>
           </div>
           <button
             onClick={() => navigate('/expenses/add')}
-            className="flex items-center gap-2 px-5 h-11 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-all duration-200"
+            className="flex items-center gap-2 px-5 h-11 bg-primary hover:bg-accent text-white rounded-lg font-medium transition-all duration-200"
           >
             <Plus size={20} />
             Add Expense
@@ -57,48 +57,48 @@ const Expenses = () => {
         </div>
 
         {error && (
-          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
+          <div className="p-4 bg-red-900/20 border border-red-800 rounded-lg text-red-400 text-sm">
             {error}
           </div>
         )}
 
         {expenses.length === 0 ? (
-          <div className="bg-card dark:bg-card-dark rounded-xl p-12 shadow-lg text-center">
-            <Receipt className="mx-auto mb-4 text-textSecondary dark:text-textSecondary-dark" size={48} />
-            <h3 className="text-lg font-medium text-textPrimary dark:text-textPrimary-dark mb-2">No expenses yet</h3>
-            <p className="text-sm text-textSecondary dark:text-textSecondary-dark mb-6">Start tracking your expenses by adding your first one</p>
+          <div className="bg-card rounded-xl p-12 shadow-lg text-center">
+            <Receipt className="mx-auto mb-4 text-text-muted" size={48} />
+            <h3 className="text-lg font-medium text-text-main mb-2">No expenses yet</h3>
+            <p className="text-sm text-text-muted mb-6">Start tracking your expenses by adding your first one</p>
             <button
               onClick={() => navigate('/expenses/add')}
-              className="inline-flex items-center gap-2 px-5 h-11 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-all duration-200"
+              className="inline-flex items-center gap-2 px-5 h-11 bg-primary hover:bg-accent text-white rounded-lg font-medium transition-all duration-200"
             >
               <Plus size={20} />
               Add First Expense
             </button>
           </div>
         ) : (
-          <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-lg">
+          <div className="bg-card rounded-xl p-6 shadow-lg">
             <div className="space-y-4">
               {expenses.map((expense) => (
-                <div key={expense._id} className="p-4 bg-background dark:bg-background-dark rounded-lg hover:bg-emerald-500/5 transition-all duration-200">
+                <div key={expense._id} className="p-4 bg-main rounded-lg hover:bg-primary/5 transition-all duration-200">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center">
-                          <Receipt className="text-emerald-500" size={20} />
+                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <Receipt className="text-primary" size={20} />
                         </div>
                         <div>
-                          <h3 className="font-medium text-textPrimary dark:text-textPrimary-dark">{expense.description}</h3>
+                          <h3 className="font-medium text-text-main">{expense.description}</h3>
                           <div className="flex items-center gap-3 mt-1">
-                            <span className="inline-flex items-center gap-1 text-xs text-textSecondary dark:text-textSecondary-dark">
+                            <span className="inline-flex items-center gap-1 text-xs text-text-muted">
                               <User size={14} />
                               {expense.paidBy || expense.payer || 'You'}
                             </span>
-                            <span className="inline-flex items-center gap-1 text-xs text-textSecondary dark:text-textSecondary-dark">
+                            <span className="inline-flex items-center gap-1 text-xs text-text-muted">
                               <Calendar size={14} />
                               {new Date(expense.date).toLocaleDateString()}
                             </span>
                             {expense.category && (
-                              <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 text-xs rounded-full">
+                              <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
                                 {expense.category}
                               </span>
                             )}
@@ -107,9 +107,9 @@ const Expenses = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-semibold text-emerald-500">{formatCurrency(expense.amount)}</p>
+                      <p className="text-lg font-semibold text-primary">{formatCurrency(expense.amount)}</p>
                       {expense.friends && expense.friends.length > 0 && (
-                        <p className="text-xs text-textSecondary dark:text-textSecondary-dark mt-1">
+                        <p className="text-xs text-text-muted mt-1">
                           Split with {expense.friends.length} {expense.friends.length === 1 ? 'person' : 'people'}
                         </p>
                       )}

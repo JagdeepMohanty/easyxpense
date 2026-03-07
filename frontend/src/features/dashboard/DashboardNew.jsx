@@ -52,17 +52,17 @@ const Dashboard = () => {
     return (
       <div className="space-y-6">
         <div className="space-y-2">
-          <div className="h-8 w-64 bg-card dark:bg-card-dark rounded animate-pulse"></div>
-          <div className="h-4 w-48 bg-card dark:bg-card-dark rounded animate-pulse"></div>
+          <div className="h-8 w-64 bg-card rounded animate-pulse"></div>
+          <div className="h-4 w-48 bg-card rounded animate-pulse"></div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-32 bg-card dark:bg-card-dark rounded-xl animate-pulse"></div>
+            <div key={i} className="h-32 bg-card rounded-xl animate-pulse"></div>
           ))}
         </div>
         <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 h-96 bg-card dark:bg-card-dark rounded-xl animate-pulse"></div>
-          <div className="h-96 bg-card dark:bg-card-dark rounded-xl animate-pulse"></div>
+          <div className="lg:col-span-2 h-96 bg-card rounded-xl animate-pulse"></div>
+          <div className="h-96 bg-card rounded-xl animate-pulse"></div>
         </div>
       </div>
     );
@@ -71,57 +71,57 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-textPrimary dark:text-textPrimary-dark">
+        <h1 className="text-2xl font-semibold text-text-main">
           {getGreeting()}, {user?.name} 👋
         </h1>
-        <p className="text-sm text-textSecondary dark:text-textSecondary-dark mt-1">
+        <p className="text-sm text-text-muted mt-1">
           Here's your balance overview
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-red-500/10 to-red-600/5 dark:from-red-500/20 dark:to-red-600/10 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200">
+        <div className="bg-gradient-to-br from-red-500/10 to-red-600/5 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-textSecondary dark:text-textSecondary-dark">You Owe</h3>
+            <h3 className="text-sm font-medium text-text-muted">You Owe</h3>
             <TrendingDown className="text-red-500" size={20} />
           </div>
           <p className="text-3xl font-semibold text-red-500">{formatCurrency(youOwe)}</p>
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 dark:from-emerald-500/20 dark:to-emerald-600/10 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200">
+        <div className="bg-gradient-to-br from-primary/10 to-accent/5 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-textSecondary dark:text-textSecondary-dark">You Are Owed</h3>
-            <TrendingUp className="text-emerald-500" size={20} />
+            <h3 className="text-sm font-medium text-text-muted">You Are Owed</h3>
+            <TrendingUp className="text-primary" size={20} />
           </div>
-          <p className="text-3xl font-semibold text-emerald-500">{formatCurrency(youAreOwed)}</p>
+          <p className="text-3xl font-semibold text-primary">{formatCurrency(youAreOwed)}</p>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 dark:from-blue-500/20 dark:to-blue-600/10 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200">
+        <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-textSecondary dark:text-textSecondary-dark">Net Balance</h3>
-            <Wallet className={netBalance >= 0 ? 'text-emerald-500' : 'text-red-500'} size={20} />
+            <h3 className="text-sm font-medium text-text-muted">Net Balance</h3>
+            <Wallet className={netBalance >= 0 ? 'text-primary' : 'text-red-500'} size={20} />
           </div>
-          <p className={`text-3xl font-semibold ${netBalance >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+          <p className={`text-3xl font-semibold ${netBalance >= 0 ? 'text-primary' : 'text-red-500'}`}>
             {formatCurrency(netBalance)}
           </p>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-card dark:bg-card-dark rounded-xl p-6 shadow-lg">
-          <h2 className="text-lg font-medium text-textPrimary dark:text-textPrimary-dark mb-6">Monthly Expenses</h2>
+        <div className="lg:col-span-2 bg-card rounded-xl p-6 shadow-lg">
+          <h2 className="text-lg font-medium text-text-main mb-6">Monthly Expenses</h2>
           {monthlyData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
-                <XAxis dataKey="month" stroke="#9CA3AF" fontSize={12} />
-                <YAxis stroke="#9CA3AF" fontSize={12} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
+                <XAxis dataKey="month" stroke="#94A3B8" fontSize={12} />
+                <YAxis stroke="#94A3B8" fontSize={12} />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#1F2937', 
+                    backgroundColor: '#0F172A', 
                     border: 'none',
                     borderRadius: '8px',
-                    color: '#E5E7EB'
+                    color: '#E2E8F0'
                   }}
                 />
                 <Bar dataKey="amount" fill="#10B981" radius={[8, 8, 0, 0]} />
@@ -129,14 +129,14 @@ const Dashboard = () => {
             </ResponsiveContainer>
           ) : (
             <div className="h-[300px] flex flex-col items-center justify-center">
-              <p className="text-textPrimary dark:text-textPrimary-dark font-medium mb-1">No expense data yet</p>
-              <p className="text-sm text-textSecondary dark:text-textSecondary-dark">Add your first expense to get started</p>
+              <p className="text-text-main font-medium mb-1">No expense data yet</p>
+              <p className="text-sm text-text-muted">Add your first expense to get started</p>
             </div>
           )}
         </div>
 
-        <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-lg">
-          <h2 className="text-lg font-medium text-textPrimary dark:text-textPrimary-dark mb-6">Categories</h2>
+        <div className="bg-card rounded-xl p-6 shadow-lg">
+          <h2 className="text-lg font-medium text-text-main mb-6">Categories</h2>
           {categoryData.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
@@ -155,49 +155,49 @@ const Dashboard = () => {
                 </Pie>
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#1F2937', 
+                    backgroundColor: '#0F172A', 
                     border: 'none',
                     borderRadius: '8px',
-                    color: '#E5E7EB'
+                    color: '#E2E8F0'
                   }}
                 />
               </PieChart>
             </ResponsiveContainer>
           ) : (
             <div className="h-[200px] flex flex-col items-center justify-center">
-              <p className="text-textPrimary dark:text-textPrimary-dark font-medium mb-1">No categories yet</p>
-              <p className="text-sm text-textSecondary dark:text-textSecondary-dark">Add expenses to see breakdown</p>
+              <p className="text-text-main font-medium mb-1">No categories yet</p>
+              <p className="text-sm text-text-muted">Add expenses to see breakdown</p>
             </div>
           )}
         </div>
       </div>
 
-      <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-lg">
-        <h2 className="text-lg font-medium text-textPrimary dark:text-textPrimary-dark mb-6">Recent Activity</h2>
+      <div className="bg-card rounded-xl p-6 shadow-lg">
+        <h2 className="text-lg font-medium text-text-main mb-6">Recent Activity</h2>
         {expenses.length > 0 ? (
           <div className="space-y-4">
             {expenses.slice(0, 5).map((expense, idx) => (
               <div key={idx}>
                 <div className="flex items-center justify-between py-3">
                   <div>
-                    <p className="text-sm font-medium text-textPrimary dark:text-textPrimary-dark">{expense.description}</p>
-                    <p className="text-xs text-textSecondary dark:text-textSecondary-dark mt-1">
+                    <p className="text-sm font-medium text-text-main">{expense.description}</p>
+                    <p className="text-xs text-text-muted mt-1">
                       {expense.payer} paid {formatCurrency(expense.amount)}
                     </p>
                   </div>
-                  <span className="text-sm font-medium text-emerald-500">{formatCurrency(expense.amount)}</span>
+                  <span className="text-sm font-medium text-primary">{formatCurrency(expense.amount)}</span>
                 </div>
-                {idx < expenses.length - 1 && <div className="border-t border-slate-700/40"></div>}
+                {idx < expenses.length - 1 && <div className="border-t border-slate-800"></div>}
               </div>
             ))}
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-textPrimary dark:text-textPrimary-dark font-medium mb-1">No expenses yet</p>
-            <p className="text-sm text-textSecondary dark:text-textSecondary-dark mb-6">Add your first expense to get started</p>
+            <p className="text-text-main font-medium mb-1">No expenses yet</p>
+            <p className="text-sm text-text-muted mb-6">Add your first expense to get started</p>
             <Link
               to="/expenses/add"
-              className="inline-flex items-center gap-2 px-5 h-11 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-all duration-200"
+              className="inline-flex items-center gap-2 px-5 h-11 bg-primary hover:bg-accent text-white rounded-lg font-medium transition-all duration-200"
             >
               <Plus size={20} />
               Add Expense

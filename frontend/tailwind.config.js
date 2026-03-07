@@ -3,32 +3,15 @@ module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
-  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        background: {
-          DEFAULT: '#F8FAFC',
-          dark: '#0B1220'
-        },
-        surface: {
-          DEFAULT: '#FFFFFF',
-          dark: '#111827'
-        },
-        card: {
-          DEFAULT: '#FFFFFF',
-          dark: '#1F2937'
-        },
+        main: '#020617',
+        card: '#0F172A',
         primary: '#10B981',
-        accent: '#10B981',
-        textPrimary: {
-          DEFAULT: '#0F172A',
-          dark: '#E5E7EB'
-        },
-        textSecondary: {
-          DEFAULT: '#64748B',
-          dark: '#9CA3AF'
-        },
+        accent: '#34D399',
+        'text-main': '#E2E8F0',
+        'text-muted': '#94A3B8',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

@@ -4,9 +4,9 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
   
   return (
-    <footer className="bg-card dark:bg-card-dark border-t border-gray-200/10 dark:border-gray-700/20 mt-auto">
+    <footer className="bg-card border-t border-slate-800 mt-auto">
       <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="text-center text-sm text-textSecondary dark:text-textSecondary-dark">
+        <div className="text-center text-sm text-text-muted">
           <p>EasyXpense © {currentYear}</p>
         </div>
       </div>

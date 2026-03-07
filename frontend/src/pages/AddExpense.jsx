@@ -117,25 +117,25 @@ const AddExpense = () => {
         <div className="mb-6">
           <button
             onClick={() => navigate('/expenses')}
-            className="flex items-center gap-2 text-textSecondary dark:text-textSecondary-dark hover:text-emerald-500 transition-colors mb-4"
+            className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors mb-4"
           >
             <ArrowLeft size={20} />
             Back to Expenses
           </button>
-          <h1 className="text-2xl font-semibold text-textPrimary dark:text-textPrimary-dark">Add Expense</h1>
-          <p className="text-sm text-textSecondary dark:text-textSecondary-dark mt-1">
+          <h1 className="text-2xl font-semibold text-text-main">Add Expense</h1>
+          <p className="text-sm text-text-muted mt-1">
             Split a new expense with friends
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+          <div className="mb-6 p-4 bg-red-900/20 border border-red-800 rounded-lg">
+            <p className="text-sm text-red-400">{error}</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700 space-y-4">
+          <div className="bg-card rounded-xl p-6 shadow-lg space-y-4">
             <Input
               label="Description"
               value={formData.description}
@@ -155,13 +155,13 @@ const AddExpense = () => {
             />
 
             <div>
-              <label className="block text-sm font-medium text-textPrimary dark:text-textPrimary-dark mb-2">
+              <label className="block text-sm font-medium text-text-main mb-2">
                 Category <span className="text-red-500">*</span>
               </label>
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full h-11 px-4 py-2 bg-card dark:bg-card-dark border border-gray-300 dark:border-gray-600 rounded-lg text-textPrimary dark:text-textPrimary-dark focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full h-11 px-4 py-2 bg-main border border-slate-700 rounded-lg text-text-main focus:outline-none focus:ring-2 focus:ring-primary/40"
               >
                 {categories.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
@@ -186,9 +186,8 @@ const AddExpense = () => {
             />
           </div>
 
-          {/* Split Type Selector */}
-          <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700">
-            <label className="block text-sm font-medium text-textPrimary dark:text-textPrimary-dark mb-3">
+          <div className="bg-card rounded-xl p-6 shadow-lg">
+            <label className="block text-sm font-medium text-text-main mb-3">
               Split Type
             </label>
             <div className="flex gap-2">
@@ -200,7 +199,7 @@ const AddExpense = () => {
                   className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
                     formData.splitType === type
                       ? 'bg-primary text-white'
-                      : 'bg-gray-100 dark:bg-gray-800 text-textSecondary dark:text-textSecondary-dark hover:bg-gray-200 dark:hover:bg-gray-700'
+                      : 'bg-main text-text-muted hover:bg-slate-800'
                   }`}
                 >
                   {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -209,19 +208,18 @@ const AddExpense = () => {
             </div>
           </div>
 
-          {/* Friend Selection */}
-          <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700">
-            <label className="block text-sm font-medium text-textPrimary dark:text-textPrimary-dark mb-3">
+          <div className="bg-card rounded-xl p-6 shadow-lg">
+            <label className="block text-sm font-medium text-text-main mb-3">
               Split With Friends
             </label>
             {friends.length === 0 ? (
-              <p className="text-sm text-textSecondary dark:text-textSecondary-dark">
+              <p className="text-sm text-text-muted">
                 No friends added yet. <button type="button" onClick={() => navigate('/friends')} className="text-primary hover:underline">Add friends</button>
               </p>
             ) : (
               <div className="space-y-2">
                 {friends.map(friend => (
-                  <div key={friend._id} className="flex items-center justify-between p-3 bg-background dark:bg-background-dark rounded-lg">
+                  <div key={friend._id} className="flex items-center justify-between p-3 bg-main rounded-lg">
                     <label className="flex items-center space-x-3 flex-1 cursor-pointer">
                       <input
                         type="checkbox"
@@ -229,7 +227,7 @@ const AddExpense = () => {
                         onChange={() => handleFriendToggle(friend.name)}
                         className="w-4 h-4 text-primary rounded focus:ring-primary"
                       />
-                      <span className="text-textPrimary dark:text-textPrimary-dark">{friend.name}</span>
+                      <span className="text-text-main">{friend.name}</span>
                     </label>
                     {selectedFriends.includes(friend.name) && formData.splitType !== 'equal' && (
                       <input
@@ -238,7 +236,7 @@ const AddExpense = () => {
                         placeholder={formData.splitType === 'percentage' ? '%' : '₹'}
                         value={customSplits[friend.name] || ''}
                         onChange={(e) => handleCustomSplitChange(friend.name, e.target.value)}
-                        className="w-24 h-9 px-3 bg-card dark:bg-card-dark border border-gray-300 dark:border-gray-600 rounded-lg text-textPrimary dark:text-textPrimary-dark text-sm"
+                        className="w-24 h-9 px-3 bg-main border border-slate-700 rounded-lg text-text-main text-sm"
                       />
                     )}
                   </div>
@@ -247,15 +245,14 @@ const AddExpense = () => {
             )}
           </div>
 
-          {/* Split Preview */}
           {selectedFriends.length > 0 && (
-            <div className="bg-card dark:bg-card-dark rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-medium text-textPrimary dark:text-textPrimary-dark mb-3">Split Preview</h3>
+            <div className="bg-card rounded-xl p-6 shadow-lg">
+              <h3 className="text-sm font-medium text-text-main mb-3">Split Preview</h3>
               <div className="space-y-2">
                 {calculateSplits().map((split, idx) => (
                   <div key={idx} className="flex justify-between text-sm">
-                    <span className="text-textSecondary dark:text-textSecondary-dark">{split.name}</span>
-                    <span className="font-medium text-textPrimary dark:text-textPrimary-dark">₹{split.amount.toFixed(2)}</span>
+                    <span className="text-text-muted">{split.name}</span>
+                    <span className="font-medium text-text-main">₹{split.amount.toFixed(2)}</span>
                   </div>
                 ))}
               </div>
@@ -266,14 +263,14 @@ const AddExpense = () => {
             <button
               type="button"
               onClick={() => navigate('/expenses')}
-              className="flex-1 h-11 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-all duration-200"
+              className="flex-1 h-11 bg-card border border-slate-700 text-text-main font-medium rounded-lg transition-all duration-200 hover:bg-slate-800"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 h-11 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 text-white font-medium rounded-lg transition-all duration-200"
+              className="flex-1 h-11 bg-primary hover:bg-accent disabled:opacity-50 text-white font-medium rounded-lg transition-all duration-200"
             >
               {loading ? 'Creating...' : 'Create Expense'}
             </button>

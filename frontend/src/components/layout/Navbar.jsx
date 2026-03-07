@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
-import { LayoutDashboard, Receipt, Users, UserPlus, Clock, Sun, Moon, Menu, X, LogOut } from 'lucide-react';
+import { LayoutDashboard, Receipt, Users, UserPlus, Clock, Menu, X, LogOut } from 'lucide-react';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -10,7 +9,6 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
 
   const navLinks = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -28,11 +26,11 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="bg-surface/80 dark:bg-surface-dark/80 backdrop-blur-md border-b border-gray-200/10 dark:border-gray-700/20 sticky top-0 z-50">
+    <nav className="bg-card border-b border-slate-800 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex justify-between items-center h-16">
           <Link to="/dashboard" className="flex items-center">
-            <span className="text-xl font-semibold bg-gradient-to-r from-emerald-500 to-emerald-400 bg-clip-text text-transparent">
+            <span className="text-xl font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               EasyXpense
             </span>
           </Link>
@@ -47,8 +45,8 @@ const Navbar = () => {
                   className={`
                     flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
                     ${isActive(link.path)
-                      ? 'bg-emerald-500 text-white'
-                      : 'text-textSecondary dark:text-textSecondary-dark hover:bg-emerald-500/10 hover:text-emerald-500'
+                      ? 'bg-primary text-white'
+                      : 'text-text-muted hover:bg-primary/10 hover:text-primary'
                     }
                   `}
                 >
@@ -59,24 +57,16 @@ const Navbar = () => {
             })}
           </div>
 
-          <div className="hidden md:flex items-center space-x-3">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200"
-              aria-label="Toggle theme"
-            >
-              {isDark ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-
+          <div className="hidden md:flex items-center">
             <div className="relative">
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200"
+                className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-slate-800/50 transition-all duration-200"
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white font-semibold text-sm">
                   {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
-                <span className="text-sm font-medium text-textPrimary dark:text-textPrimary-dark">
+                <span className="text-sm font-medium text-text-main">
                   {user?.name}
                 </span>
               </button>
@@ -84,14 +74,14 @@ const Navbar = () => {
               {profileOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setProfileOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-48 bg-card dark:bg-card-dark rounded-xl shadow-lg py-2 z-20">
-                    <div className="px-4 py-3 border-b border-gray-200/10 dark:border-gray-700/20">
-                      <p className="text-sm font-medium text-textPrimary dark:text-textPrimary-dark">{user?.name}</p>
-                      <p className="text-xs text-textSecondary dark:text-textSecondary-dark mt-1">{user?.email || user?.phone}</p>
+                  <div className="absolute right-0 mt-2 w-48 bg-card rounded-xl shadow-lg py-2 z-20 border border-slate-800">
+                    <div className="px-4 py-3 border-b border-slate-800">
+                      <p className="text-sm font-medium text-text-main">{user?.name}</p>
+                      <p className="text-xs text-text-muted mt-1">{user?.email || user?.phone}</p>
                     </div>
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 flex items-center gap-2"
+                      className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-900/20 transition-all duration-200 flex items-center gap-2"
                     >
                       <LogOut size={16} />
                       Logout
@@ -104,14 +94,14 @@ const Navbar = () => {
 
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200"
+            className="md:hidden p-2 rounded-lg hover:bg-slate-800/50 transition-all duration-200 text-text-main"
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden pb-4 border-t border-gray-200/10 dark:border-gray-700/20">
+          <div className="md:hidden pb-4 border-t border-slate-800">
             <div className="space-y-1 pt-4">
               {navLinks.map((link) => {
                 const Icon = link.icon;
@@ -123,8 +113,8 @@ const Navbar = () => {
                     className={`
                       flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
                       ${isActive(link.path)
-                        ? 'bg-emerald-500 text-white'
-                        : 'text-textSecondary dark:text-textSecondary-dark hover:bg-emerald-500/10'
+                        ? 'bg-primary text-white'
+                        : 'text-text-muted hover:bg-primary/10'
                       }
                     `}
                   >
@@ -133,14 +123,14 @@ const Navbar = () => {
                   </Link>
                 );
               })}
-              <div className="border-t border-gray-200/10 dark:border-gray-700/20 my-2 pt-2">
+              <div className="border-t border-slate-800 my-2 pt-2">
                 <div className="px-4 py-2">
-                  <p className="text-sm font-medium text-textPrimary dark:text-textPrimary-dark">{user?.name}</p>
-                  <p className="text-xs text-textSecondary dark:text-textSecondary-dark mt-1">{user?.email || user?.phone}</p>
+                  <p className="text-sm font-medium text-text-main">{user?.name}</p>
+                  <p className="text-xs text-text-muted mt-1">{user?.email || user?.phone}</p>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 flex items-center gap-2"
+                  className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-900/20 rounded-lg transition-all duration-200 flex items-center gap-2"
                 >
                   <LogOut size={16} />
                   Logout
