@@ -3,11 +3,10 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ProtectedRoute from '../components/ProtectedRoute';
 
-// Lazy load pages for better performance
 const Home = lazy(() => import('../pages/Home'));
 const Login = lazy(() => import('../pages/Login'));
 const Register = lazy(() => import('../pages/Register'));
-const DashboardNew = lazy(() => import('../features/dashboard/DashboardNew'));
+const DashboardNew = lazy(() => import('../features/expenses/dashboard/DashboardNew'));
 const ExpensesNew = lazy(() => import('../features/expenses/ExpensesNew'));
 const AddExpense = lazy(() => import('../pages/AddExpense'));
 const FriendsNew = lazy(() => import('../features/friends/FriendsNew'));
@@ -15,9 +14,8 @@ const GroupsNew = lazy(() => import('../features/groups/GroupsNew'));
 const DebtTracker = lazy(() => import('../pages/DebtTracker'));
 const PaymentHistory = lazy(() => import('../pages/PaymentHistory'));
 
-// Loading component
 const LoadingFallback = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background dark:bg-background-dark">
+  <div className="min-h-screen flex items-center justify-center bg-main">
     <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
   </div>
 );
@@ -28,12 +26,10 @@ const AppRoutes = () => {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
-        {/* Public Routes */}
         <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Home />} />
         <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
         <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />} />
 
-        {/* Protected Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardNew /></ProtectedRoute>} />
         <Route path="/expenses" element={<ProtectedRoute><ExpensesNew /></ProtectedRoute>} />
         <Route path="/expenses/add" element={<ProtectedRoute><AddExpense /></ProtectedRoute>} />
@@ -42,7 +38,6 @@ const AppRoutes = () => {
         <Route path="/debts" element={<ProtectedRoute><DebtTracker /></ProtectedRoute>} />
         <Route path="/payments" element={<ProtectedRoute><PaymentHistory /></ProtectedRoute>} />
 
-        {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
