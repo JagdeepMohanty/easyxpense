@@ -7,11 +7,11 @@ import ProtectedRoute from '../components/ProtectedRoute';
 const Home = lazy(() => import('../pages/Home'));
 const Login = lazy(() => import('../pages/Login'));
 const Register = lazy(() => import('../pages/Register'));
-const DashboardNew = lazy(() => import('../pages/DashboardNew'));
-const ExpensesNew = lazy(() => import('../pages/ExpensesNew'));
+const DashboardNew = lazy(() => import('../features/dashboard/DashboardNew'));
+const ExpensesNew = lazy(() => import('../features/expenses/ExpensesNew'));
 const AddExpense = lazy(() => import('../pages/AddExpense'));
-const FriendsNew = lazy(() => import('../pages/FriendsNew'));
-const GroupsNew = lazy(() => import('../pages/GroupsNew'));
+const FriendsNew = lazy(() => import('../features/friends/FriendsNew'));
+const GroupsNew = lazy(() => import('../features/groups/GroupsNew'));
 const DebtTracker = lazy(() => import('../pages/DebtTracker'));
 const PaymentHistory = lazy(() => import('../pages/PaymentHistory'));
 

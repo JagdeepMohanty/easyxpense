@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { expensesAPI, friendsAPI } from '../services/api';
 import MainLayout from '../layouts/MainLayout';
 import Input from '../components/ui/Input';
+import { ArrowLeft } from 'lucide-react';
 
 const AddExpense = () => {
   const [formData, setFormData] = useState({
@@ -113,7 +114,19 @@ const AddExpense = () => {
   return (
     <MainLayout>
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-textPrimary dark:text-textPrimary-dark mb-8">Add Expense</h1>
+        <div className="mb-6">
+          <button
+            onClick={() => navigate('/expenses')}
+            className="flex items-center gap-2 text-textSecondary dark:text-textSecondary-dark hover:text-emerald-500 transition-colors mb-4"
+          >
+            <ArrowLeft size={20} />
+            Back to Expenses
+          </button>
+          <h1 className="text-2xl font-semibold text-textPrimary dark:text-textPrimary-dark">Add Expense</h1>
+          <p className="text-sm text-textSecondary dark:text-textSecondary-dark mt-1">
+            Split a new expense with friends
+          </p>
+        </div>
 
         {error && (
           <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
@@ -253,14 +266,14 @@ const AddExpense = () => {
             <button
               type="button"
               onClick={() => navigate('/expenses')}
-              className="flex-1 h-11 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-textPrimary dark:text-textPrimary-dark font-medium rounded-lg transition-colors"
+              className="flex-1 h-11 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-all duration-200"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 h-11 bg-primary hover:bg-primary/90 disabled:bg-gray-300 text-white font-medium rounded-lg transition-colors"
+              className="flex-1 h-11 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 text-white font-medium rounded-lg transition-all duration-200"
             >
               {loading ? 'Creating...' : 'Create Expense'}
             </button>
