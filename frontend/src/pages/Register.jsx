@@ -46,21 +46,21 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-500/5 to-emerald-600/5 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-500/5 to-emerald-600/5 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
-        <div className="bg-card dark:bg-card-dark rounded-xl shadow-lg p-8">
+        <div className="bg-card rounded-xl shadow-lg p-8">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-semibold bg-gradient-to-r from-emerald-500 to-emerald-400 bg-clip-text text-transparent mb-2">
+            <h1 className="text-2xl font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
               EasyXpense
             </h1>
-            <p className="text-sm text-textSecondary dark:text-textSecondary-dark">
+            <p className="text-sm text-text-muted">
               Create your account to get started
             </p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            <div className="mb-6 p-4 bg-red-900/20 border border-red-800 rounded-lg">
+              <p className="text-sm text-red-400">{error}</p>
             </div>
           )}
 
@@ -82,7 +82,7 @@ const Register = () => {
               placeholder="your@email.com"
             />
 
-            <div className="text-center text-sm text-textSecondary dark:text-textSecondary-dark">
+            <div className="text-center text-sm text-text-muted">
               OR
             </div>
 
@@ -115,16 +115,16 @@ const Register = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-11 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-400 text-white font-medium rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
+              className="w-full h-11 bg-primary hover:bg-accent disabled:bg-gray-400 text-white font-medium rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating account...' : 'Register'}
             </button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-textSecondary dark:text-textSecondary-dark">
+            <p className="text-sm text-text-muted">
               Already have an account?{' '}
-              <Link to="/login" className="text-emerald-500 hover:text-emerald-600 font-medium transition-colors duration-200">
+              <Link to="/login" className="text-primary hover:text-accent font-medium transition-colors duration-200">
                 Login here
               </Link>
             </p>

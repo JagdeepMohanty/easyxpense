@@ -81,7 +81,7 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-red-500/10 to-red-600/5 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200">
+        <div className="bg-card rounded-xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-text-muted">You Owe</h3>
             <TrendingDown className="text-red-500" size={20} />
@@ -89,7 +89,7 @@ const Dashboard = () => {
           <p className="text-3xl font-semibold text-red-500">{formatCurrency(youOwe)}</p>
         </div>
 
-        <div className="bg-gradient-to-br from-primary/10 to-accent/5 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200">
+        <div className="bg-card rounded-xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-text-muted">You Are Owed</h3>
             <TrendingUp className="text-primary" size={20} />
@@ -97,7 +97,7 @@ const Dashboard = () => {
           <p className="text-3xl font-semibold text-primary">{formatCurrency(youAreOwed)}</p>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200">
+        <div className="bg-card rounded-xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-text-muted">Net Balance</h3>
             <Wallet className={netBalance >= 0 ? 'text-primary' : 'text-red-500'} size={20} />

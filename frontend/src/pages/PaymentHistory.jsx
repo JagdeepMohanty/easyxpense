@@ -54,8 +54,8 @@ const PaymentHistory = () => {
     <MainLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-textPrimary dark:text-textPrimary-dark">Payment History</h1>
-          <p className="text-textSecondary dark:text-textSecondary-dark mt-1">View all your settlement records</p>
+          <h1 className="text-2xl font-semibold text-text-main">Payment History</h1>
+          <p className="text-text-muted mt-1">View all your settlement records</p>
         </div>
 
         {settlements.length > 0 && (
@@ -79,56 +79,56 @@ const PaymentHistory = () => {
             description={`No settlements match "${searchTerm}"`}
           />
         ) : (
-          <div className="bg-card dark:bg-card-dark rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-card rounded-xl shadow-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <thead className="bg-main border-b border-slate-800">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-textSecondary dark:text-textSecondary-dark uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
                       Date
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-textSecondary dark:text-textSecondary-dark uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
                       From
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-textSecondary dark:text-textSecondary-dark uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
                       To
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-textSecondary dark:text-textSecondary-dark uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-text-muted uppercase tracking-wider">
                       Amount
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="divide-y divide-slate-800">
                   {filteredSettlements.map((settlement, index) => (
-                    <tr key={settlement._id || index} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-textPrimary dark:text-textPrimary-dark">
+                    <tr key={settlement._id || index} className="hover:bg-main transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-text-main">
                         {formatDate(settlement.created_at || settlement.createdAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mr-3">
-                            <span className="text-red-600 dark:text-red-400 font-semibold text-sm">
+                          <div className="w-8 h-8 bg-red-500/10 rounded-full flex items-center justify-center mr-3">
+                            <span className="text-red-500 font-semibold text-sm">
                               {settlement.fromUser?.charAt(0)?.toUpperCase() || '?'}
                             </span>
                           </div>
-                          <span className="text-sm font-medium text-textPrimary dark:text-textPrimary-dark">
+                          <span className="text-sm font-medium text-text-main">
                             {settlement.fromUser}
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mr-3">
-                            <span className="text-green-600 dark:text-green-400 font-semibold text-sm">
+                          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mr-3">
+                            <span className="text-primary font-semibold text-sm">
                               {settlement.toUser?.charAt(0)?.toUpperCase() || '?'}
                             </span>
                           </div>
-                          <span className="text-sm font-medium text-textPrimary dark:text-textPrimary-dark">
+                          <span className="text-sm font-medium text-text-main">
                             {settlement.toUser}
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-green-600 dark:text-green-400">
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-primary">
                         {formatCurrency(settlement.amount)}
                       </td>
                     </tr>
