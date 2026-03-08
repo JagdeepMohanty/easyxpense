@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify, current_app
 import jwt
 from bson import ObjectId
 from datetime import datetime
-from app.utils.sanitize import sanitize_input, validate_phone
+from app.utils.helpers import sanitize_input, validate_phone
 
 friends_bp = Blueprint('friends', __name__)
 

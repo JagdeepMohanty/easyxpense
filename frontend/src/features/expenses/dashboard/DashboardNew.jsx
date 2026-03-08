@@ -15,8 +15,9 @@ const Dashboard = () => {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const youOwe = 1250;
-  const youAreOwed = 3400;
+  const totalExpenses = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+  const youOwe = 0;
+  const youAreOwed = 0;
   const netBalance = youAreOwed - youOwe;
 
   const getGreeting = () => {
@@ -176,18 +177,18 @@ const Dashboard = () => {
         <h2 className="text-lg font-medium text-text-main mb-6">Recent Activity</h2>
         {expenses.length > 0 ? (
           <div className="space-y-4">
-            {expenses.slice(0, 5).map((expense, idx) => (
-              <div key={idx}>
+            {expenses.slice(0, 5).map((expense) => (
+              <div key={expense._id}>
                 <div className="flex items-center justify-between py-3">
                   <div>
                     <p className="text-sm font-medium text-text-main">{expense.description}</p>
                     <p className="text-xs text-text-muted mt-1">
-                      {expense.payer} paid {formatCurrency(expense.amount)}
+                      {new Date(expense.date).toLocaleDateString()}
                     </p>
                   </div>
                   <span className="text-sm font-medium text-primary">{formatCurrency(expense.amount)}</span>
                 </div>
-                {idx < expenses.length - 1 && <div className="border-t border-slate-800"></div>}
+                {expense._id !== expenses[Math.min(4, expenses.length - 1)]._id && <div className="border-t border-slate-800"></div>}
               </div>
             ))}
           </div>

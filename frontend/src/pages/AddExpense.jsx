@@ -30,7 +30,7 @@ const AddExpense = () => {
   const fetchFriends = async () => {
     try {
       const response = await friendsAPI.getAll('', 1, 100);
-      setFriends(response.data.friends || []);
+      setFriends(response.data.data || []);
     } catch (err) {
       // Silent fail
     }

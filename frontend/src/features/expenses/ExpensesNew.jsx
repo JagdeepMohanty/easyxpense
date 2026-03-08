@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { expensesAPI } from '../../services/api';
 import { formatCurrency } from '../../utils/currency';
 import MainLayout from '../../layouts/MainLayout';
-import { Plus, Receipt, Calendar, User } from 'lucide-react';
+import { Plus, Receipt, Calendar } from 'lucide-react';
 
 const Expenses = () => {
   const [expenses, setExpenses] = useState([]);
