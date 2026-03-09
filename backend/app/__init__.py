@@ -1,5 +1,7 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from dotenv import load_dotenv
 from .config import Config
 from .extensions import init_db
@@ -10,11 +12,20 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     
-    # CORS configuration
+    # CORS configuration with credentials support
     CORS(app, 
          origins=['https://easyxpense.netlify.app', 'http://localhost:3000', 'http://localhost:5173'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-         allow_headers=['Content-Type', 'Authorization'])
+         allow_headers=['Content-Type', 'Authorization'],
+         supports_credentials=True)
+    
+    # Initialize rate limiter
+    limiter = Limiter(
+        get_remote_address,
+        app=app,
+        default_limits=["200 per day", "50 per hour"],
+        storage_uri="memory://"
+    )
     
     # Initialize MongoDB
     try:
@@ -40,6 +51,9 @@ def create_app():
     from app.routes.friends import friends_bp
     from app.routes.analytics import analytics_bp
     
+    # Apply rate limiting to auth routes
+    limiter.limit("5 per minute")(auth_bp)
+    
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(users_bp, url_prefix="/api/users")
     app.register_blueprint(groups_bp, url_prefix="/api/groups")
@@ -58,13 +72,19 @@ def create_app():
         except Exception as e:
             return jsonify({"status": "error", "database": "disconnected"}), 503
     
-    # Error handlers
+    # Global error handlers
     @app.errorhandler(404)
     def not_found(error):
-        return jsonify({"error": "Endpoint not found"}), 404
+        return jsonify({"success": False, "error": "Resource not found"}), 404
     
     @app.errorhandler(500)
     def internal_error(error):
-        return jsonify({"error": "Internal server error"}), 500
+        app.logger.error(f'Internal error: {error}')
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+    
+    @app.errorhandler(Exception)
+    def handle_exception(error):
+        app.logger.error(f'Unhandled exception: {error}')
+        return jsonify({"success": False, "error": str(error)}), 500
     
     return app

@@ -5,13 +5,13 @@ import jwt
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        auth_header = request.headers.get("Authorization")
+        # Read token from cookie instead of Authorization header
+        token = request.cookies.get('access_token')
         
-        if not auth_header:
+        if not token:
             return jsonify({"error": "Token missing"}), 401
         
         try:
-            token = auth_header.split(" ")[1]
             payload = jwt.decode(
                 token,
                 current_app.config["JWT_SECRET_KEY"],

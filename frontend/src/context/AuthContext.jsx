@@ -13,15 +13,12 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     
-    if (storedToken && storedUser) {
-      setToken(storedToken);
+    if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
     setLoading(false);
@@ -29,11 +26,9 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, phone, password) => {
     const response = await authAPI.login(email, phone, password);
-    const { token: accessToken, user: newUser } = response.data;
+    const { user: newUser } = response.data;
 
-    setToken(accessToken);
     setUser(newUser);
-    localStorage.setItem('token', accessToken);
     localStorage.setItem('user', JSON.stringify(newUser));
 
     return response.data;
@@ -41,11 +36,9 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (name, email, phone, password) => {
     const response = await authAPI.register(name, email, phone, password);
-    const { token: accessToken, user: newUser } = response.data;
+    const { user: newUser } = response.data;
 
-    setToken(accessToken);
     setUser(newUser);
-    localStorage.setItem('token', accessToken);
     localStorage.setItem('user', JSON.stringify(newUser));
 
     return response.data;
@@ -58,20 +51,17 @@ export const AuthProvider = ({ children }) => {
       // Ignore logout errors
     }
     
-    setToken(null);
     setUser(null);
-    localStorage.removeItem('token');
     localStorage.removeItem('user');
   };
 
   const value = {
     user,
-    token,
     loading,
     login,
     register,
     logout,
-    isAuthenticated: !!token,
+    isAuthenticated: !!user,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
