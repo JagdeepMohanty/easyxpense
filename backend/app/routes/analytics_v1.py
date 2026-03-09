@@ -6,10 +6,10 @@ analytics_v1_bp = Blueprint('analytics_v1', __name__)
 
 @analytics_v1_bp.route('/monthly', methods=['GET'])
 @token_required
-def get_monthly_summary():
+async def get_monthly_summary():
     try:
         months = int(request.args.get('months', 6))
-        data = analytics_service.get_monthly_summary(request.user_id, months)
+        data = await analytics_service.async_get_monthly_summary(request.user_id, months)
         return jsonify({'data': data}), 200
         
     except Exception as e:
@@ -18,9 +18,9 @@ def get_monthly_summary():
 
 @analytics_v1_bp.route('/categories', methods=['GET'])
 @token_required
-def get_category_breakdown():
+async def get_category_breakdown():
     try:
-        data = analytics_service.get_category_breakdown(request.user_id)
+        data = await analytics_service.async_get_category_breakdown(request.user_id)
         return jsonify({'data': data}), 200
         
     except Exception as e:

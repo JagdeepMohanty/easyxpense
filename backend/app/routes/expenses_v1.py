@@ -1,18 +1,19 @@
 from flask import Blueprint, request, jsonify, current_app
+from pydantic import ValidationError
 from app.middleware.auth import token_required
-from app.utils.helpers import sanitize_input
+from app.dto.expense_dto import ExpenseCreateDTO
 from app.services import expense_service
 
 expenses_v1_bp = Blueprint('expenses_v1', __name__)
 
 @expenses_v1_bp.route('/', methods=['GET'])
 @token_required
-def get_expenses():
+async def get_expenses():
     try:
         page = int(request.args.get('page', 1))
         limit = int(request.args.get('limit', 10))
         
-        result = expense_service.get_user_expenses(request.user_id, page, limit)
+        result = await expense_service.async_get_user_expenses(request.user_id, page, limit)
         return jsonify(result), 200
         
     except Exception as e:
@@ -21,25 +22,17 @@ def get_expenses():
 
 @expenses_v1_bp.route('/', methods=['POST'])
 @token_required
-def create_expense():
+async def create_expense():
     try:
-        data = sanitize_input(request.get_json())
-        amount = data.get('amount')
-        description = data.get('description')
-        category = data.get('category')
-        date = data.get('date')
-        friends = data.get('friends', [])
+        dto = ExpenseCreateDTO(**request.get_json())
         
-        if not all([amount, description, category]):
-            return jsonify({'error': 'Amount, description, and category are required'}), 400
-        
-        try:
-            amount = float(amount)
-        except ValueError:
-            return jsonify({'error': 'Invalid amount'}), 400
-        
-        expense_id = expense_service.create_expense(
-            request.user_id, amount, description, category, friends, date
+        expense_id = await expense_service.async_create_expense(
+            request.user_id,
+            dto.amount,
+            dto.description,
+            dto.category,
+            dto.friends,
+            dto.date
         )
         
         return jsonify({
@@ -47,6 +40,8 @@ def create_expense():
             'message': 'Expense created successfully'
         }), 201
         
+    except ValidationError as e:
+        return jsonify({'error': str(e.errors()[0]['msg'])}), 400
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:
@@ -55,9 +50,9 @@ def create_expense():
 
 @expenses_v1_bp.route('/<expense_id>', methods=['DELETE'])
 @token_required
-def delete_expense(expense_id):
+async def delete_expense(expense_id):
     try:
-        expense_service.delete_expense(request.user_id, expense_id)
+        await expense_service.async_delete_expense(request.user_id, expense_id)
         return jsonify({'message': 'Expense deleted successfully'}), 200
         
     except ValueError as e:

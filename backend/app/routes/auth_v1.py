@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app, make_response
-from app.utils.helpers import sanitize_input, validate_email, validate_phone
+from pydantic import ValidationError
+from app.dto.auth_dto import LoginDTO, RegisterDTO
 from app.services import auth_service
 
 auth_v1_bp = Blueprint('auth_v1', __name__)
@@ -30,24 +31,8 @@ def set_auth_cookies(response, access_token, refresh_token):
 @auth_v1_bp.route('/login', methods=['POST'])
 def login():
     try:
-        data = sanitize_input(request.get_json())
-        email = data.get('email')
-        phone = data.get('phone')
-        password = data.get('password')
-        
-        if not password:
-            return jsonify({'error': 'Password is required'}), 400
-        
-        if not email and not phone:
-            return jsonify({'error': 'Email or phone is required'}), 400
-        
-        if email and not validate_email(email):
-            return jsonify({'error': 'Invalid email format'}), 400
-        
-        if phone and not validate_phone(phone):
-            return jsonify({'error': 'Invalid phone format'}), 400
-        
-        user, access_token, refresh_token = auth_service.login_user(email, phone, password)
+        dto = LoginDTO(**request.get_json())
+        user, access_token, refresh_token = auth_service.login_user(dto.email, dto.phone, dto.password)
         
         response = make_response(jsonify({
             'user': user,
@@ -56,6 +41,8 @@ def login():
         
         return set_auth_cookies(response, access_token, refresh_token)
         
+    except ValidationError as e:
+        return jsonify({'error': str(e.errors()[0]['msg'])}), 400
     except ValueError as e:
         return jsonify({'error': str(e)}), 401
     except Exception as e:
@@ -63,27 +50,12 @@ def login():
         return jsonify({'error': 'Login failed'}), 500
 
 @auth_v1_bp.route('/register', methods=['POST'])
-def register():
+async def register():
     try:
-        data = sanitize_input(request.get_json())
-        name = data.get('name')
-        email = data.get('email')
-        phone = data.get('phone')
-        password = data.get('password')
-        
-        if not all([name, password]):
-            return jsonify({'error': 'Name and password are required'}), 400
-        
-        if not email and not phone:
-            return jsonify({'error': 'Email or phone is required'}), 400
-        
-        if email and not validate_email(email):
-            return jsonify({'error': 'Invalid email format'}), 400
-        
-        if phone and not validate_phone(phone):
-            return jsonify({'error': 'Invalid phone format'}), 400
-        
-        user, access_token, refresh_token = auth_service.register_user(name, email, phone, password)
+        dto = RegisterDTO(**request.get_json())
+        user, access_token, refresh_token = await auth_service.async_register_user(
+            dto.name, dto.email, dto.phone, dto.password
+        )
         
         response = make_response(jsonify({
             'user': user,
@@ -92,6 +64,8 @@ def register():
         
         return set_auth_cookies(response, access_token, refresh_token)
         
+    except ValidationError as e:
+        return jsonify({'error': str(e.errors()[0]['msg'])}), 400
     except ValueError as e:
         status_code = 409 if 'already exists' in str(e) else 400
         return jsonify({'error': str(e)}), status_code

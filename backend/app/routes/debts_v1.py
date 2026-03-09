@@ -1,15 +1,17 @@
 from flask import Blueprint, request, jsonify, current_app
+from pydantic import ValidationError
 from app.middleware.auth import token_required
+from app.dto.debt_dto import SettlementCreateDTO
 from app.services import debt_service
 
 debts_v1_bp = Blueprint('debts_v1', __name__)
 
 @debts_v1_bp.route('/', methods=['GET'])
 @token_required
-def get_debts():
+async def get_debts():
     try:
         group_id = request.args.get('group_id')
-        debts = debt_service.calculate_user_debts(request.user_id, group_id)
+        debts = await debt_service.async_calculate_user_debts(request.user_id, group_id)
         return jsonify({'debts': debts}), 200
         
     except Exception as e:
@@ -18,28 +20,24 @@ def get_debts():
 
 @debts_v1_bp.route('/settle', methods=['POST'])
 @token_required
-def settle_debt():
+async def settle_debt():
     try:
-        data = request.get_json()
-        from_user = data.get('fromUser')
-        to_user = data.get('toUser')
-        amount = data.get('amount')
+        dto = SettlementCreateDTO(**request.get_json())
         
-        if not all([from_user, to_user, amount]):
-            return jsonify({'error': 'fromUser, toUser, and amount are required'}), 400
-        
-        try:
-            amount = float(amount)
-        except ValueError:
-            return jsonify({'error': 'Invalid amount'}), 400
-        
-        settlement_id = debt_service.record_settlement(request.user_id, from_user, to_user, amount)
+        settlement_id = await debt_service.async_record_settlement(
+            request.user_id,
+            dto.fromUser,
+            dto.toUser,
+            dto.amount
+        )
         
         return jsonify({
             'id': settlement_id,
             'message': 'Settlement recorded successfully'
         }), 201
         
+    except ValidationError as e:
+        return jsonify({'error': str(e.errors()[0]['msg'])}), 400
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:

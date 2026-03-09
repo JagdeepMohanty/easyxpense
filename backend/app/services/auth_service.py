@@ -4,6 +4,7 @@ import re
 from datetime import datetime, timedelta
 from flask import current_app
 from app.models.user_model import User
+from app.repositories.user_repository import UserRepository
 
 def validate_strong_password(password):
     pattern = r'^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$'
@@ -23,15 +24,7 @@ def generate_tokens(user_id):
     return access_token, refresh_token
 
 def login_user(email, phone, password):
-    query = {}
-    if email:
-        query['email'] = email
-    elif phone:
-        query['phone'] = phone
-    else:
-        raise ValueError('Email or phone required')
-    
-    user = current_app.db.users.find_one(query)
+    user = UserRepository.find_by_email_or_phone(email, phone)
     if not user or not bcrypt.checkpw(password.encode('utf-8'), user['password']):
         raise ValueError('Invalid credentials')
     
@@ -42,18 +35,28 @@ def register_user(name, email, phone, password):
     if not validate_strong_password(password):
         raise ValueError('Password must be at least 8 characters and include uppercase, number, and special character')
     
-    query = {}
-    if email:
-        query['email'] = email
-    if phone:
-        query['phone'] = phone
-    
-    if current_app.db.users.find_one(query):
+    if UserRepository.find_by_email_or_phone(email, phone):
         raise ValueError('User already exists')
     
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
     user_data = User.create(name, hashed_password, email, phone)
-    result = current_app.db.users.insert_one(user_data)
+    result = UserRepository.create(user_data)
+    user_data['_id'] = result.inserted_id
+    
+    access_token, refresh_token = generate_tokens(str(result.inserted_id))
+    return User.to_dict(user_data), access_token, refresh_token
+
+async def async_register_user(name, email, phone, password):
+    """Async version for better performance"""
+    if not validate_strong_password(password):
+        raise ValueError('Password must be at least 8 characters and include uppercase, number, and special character')
+    
+    if UserRepository.find_by_email_or_phone(email, phone):
+        raise ValueError('User already exists')
+    
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    user_data = User.create(name, hashed_password, email, phone)
+    result = await UserRepository.async_create(user_data)
     user_data['_id'] = result.inserted_id
     
     access_token, refresh_token = generate_tokens(str(result.inserted_id))
