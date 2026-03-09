@@ -48,6 +48,7 @@ def create_app():
     from app.routes.friends_v1 import friends_v1_bp
     from app.routes.debts_v1 import debts_v1_bp
     from app.routes.analytics_v1 import analytics_v1_bp
+    from app.routes.debt_simplifier import debt_simplifier_bp
     
     # Apply rate limiting to auth routes
     limiter.limit(app.config.get('RATE_LIMIT_AUTH', '5 per minute'))(auth_v1_bp)
@@ -57,6 +58,7 @@ def create_app():
     app.register_blueprint(friends_v1_bp, url_prefix="/api/v1/friends")
     app.register_blueprint(debts_v1_bp, url_prefix="/api/v1/debts")
     app.register_blueprint(analytics_v1_bp, url_prefix="/api/v1/analytics")
+    app.register_blueprint(debt_simplifier_bp, url_prefix="/api")
     
     # Register legacy blueprints for backward compatibility
     from app.routes.auth import auth_bp
