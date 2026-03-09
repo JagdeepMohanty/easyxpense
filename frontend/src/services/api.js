@@ -48,7 +48,15 @@ axiosClient.interceptors.response.use(
         return axiosClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        window.location.href = '/login';
+        
+        // CRITICAL FIX: Remove user from localStorage to prevent redirect loop
+        localStorage.removeItem('user');
+        
+        // Only redirect if not already on login page
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+        
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
