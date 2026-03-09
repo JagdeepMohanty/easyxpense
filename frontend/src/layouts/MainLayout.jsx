@@ -1,5 +1,5 @@
 import React from 'react';
-import Navbar from '../components/layout/Navbar';
+import Navbar from '../components/Navbar';
 import Footer from '../components/layout/Footer';
 
 const MainLayout = ({ children }) => {
