@@ -3,14 +3,14 @@ from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from dotenv import load_dotenv
-from .config import Config
 from .extensions import init_db
+from .config import get_config
 
 load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(get_config())
     
     # CORS configuration with credentials support
     CORS(app, 
@@ -23,7 +23,7 @@ def create_app():
     limiter = Limiter(
         get_remote_address,
         app=app,
-        default_limits=["200 per day", "50 per hour"],
+        default_limits=[app.config.get('RATE_LIMIT', '200 per day'), "50 per hour"],
         storage_uri="memory://"
     )
     
@@ -42,7 +42,23 @@ def create_app():
         response.headers['X-XSS-Protection'] = '1; mode=block'
         return response
     
-    # Register blueprints
+    # Register v1 blueprints
+    from app.routes.auth_v1 import auth_v1_bp
+    from app.routes.expenses_v1 import expenses_v1_bp
+    from app.routes.friends_v1 import friends_v1_bp
+    from app.routes.debts_v1 import debts_v1_bp
+    from app.routes.analytics_v1 import analytics_v1_bp
+    
+    # Apply rate limiting to auth routes
+    limiter.limit(app.config.get('RATE_LIMIT_AUTH', '5 per minute'))(auth_v1_bp)
+    
+    app.register_blueprint(auth_v1_bp, url_prefix="/api/v1/auth")
+    app.register_blueprint(expenses_v1_bp, url_prefix="/api/v1/expenses")
+    app.register_blueprint(friends_v1_bp, url_prefix="/api/v1/friends")
+    app.register_blueprint(debts_v1_bp, url_prefix="/api/v1/debts")
+    app.register_blueprint(analytics_v1_bp, url_prefix="/api/v1/analytics")
+    
+    # Register legacy blueprints for backward compatibility
     from app.routes.auth import auth_bp
     from app.routes.users import users_bp
     from app.routes.groups import groups_bp
@@ -51,7 +67,6 @@ def create_app():
     from app.routes.friends import friends_bp
     from app.routes.analytics import analytics_bp
     
-    # Apply rate limiting to auth routes
     limiter.limit("5 per minute")(auth_bp)
     
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
