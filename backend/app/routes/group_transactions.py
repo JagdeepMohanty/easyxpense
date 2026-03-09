@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app
 from app.models.group_transaction import GroupTransaction
-from app.models.group import Group
 from app.middleware.auth import token_required
 from app.utils.sanitize import sanitize_string, sanitize_amount
 from bson import ObjectId
@@ -17,8 +16,7 @@ def create_transaction(group_id):
         return jsonify({'error': 'Request body required'}), 400
     
     # Verify group ownership
-    group_model = Group(current_app.db)
-    group = group_model.get_group_by_id(group_id)
+    group = current_app.db.groups.find_one({'_id': ObjectId(group_id)})
     if not group or str(group['user_id']) != str(user['_id']):
         return jsonify({'error': 'Group not found'}), 404
     
@@ -72,8 +70,7 @@ def get_transactions(group_id):
     limit = min(int(request.args.get('limit', 20)), 50)
     
     # Verify group ownership
-    group_model = Group(current_app.db)
-    group = group_model.get_group_by_id(group_id)
+    group = current_app.db.groups.find_one({'_id': ObjectId(group_id)})
     if not group or str(group['user_id']) != str(user['_id']):
         return jsonify({'error': 'Group not found'}), 404
     
@@ -98,8 +95,7 @@ def get_balances(group_id):
     user = request.current_user
     
     # Verify group ownership
-    group_model = Group(current_app.db)
-    group = group_model.get_group_by_id(group_id)
+    group = current_app.db.groups.find_one({'_id': ObjectId(group_id)})
     if not group or str(group['user_id']) != str(user['_id']):
         return jsonify({'error': 'Group not found'}), 404
     

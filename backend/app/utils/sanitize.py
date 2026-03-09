@@ -8,6 +8,22 @@ def sanitize_input(data):
         return [sanitize_input(item) for item in data]
     return data
 
+def sanitize_string(value, max_length=200):
+    """Sanitize string input with length limit"""
+    if not value:
+        return ''
+    return str(value).strip()[:max_length]
+
+def sanitize_amount(value):
+    """Sanitize and validate amount"""
+    try:
+        amount = float(value)
+        if amount <= 0:
+            raise ValueError('Amount must be positive')
+        return amount
+    except (TypeError, ValueError):
+        raise ValueError('Invalid amount')
+
 def validate_email(email):
     """Basic email validation"""
     import re

@@ -96,17 +96,6 @@ def create_expense():
         result = current_app.db.expenses.insert_one(expense_data)
         expense_id = str(result.inserted_id)
         
-        # Emit realtime update
-        from app.socketio_extension import emit_expense_added
-        emit_expense_added(request.user_id, group_id, {
-            'id': expense_id,
-            'amount': amount,
-            'description': description,
-            'category': category,
-            'date': expense_date.isoformat(),
-            'friends': friends
-        })
-        
         return jsonify({
             'id': expense_id,
             'message': 'Expense created successfully'
