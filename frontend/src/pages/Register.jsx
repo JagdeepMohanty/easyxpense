@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Input from '../components/ui/Input';
+import { Mail, Lock, User, ArrowRight } from 'lucide-react';
 
 const Register = () => {
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { register } = useAuth();
@@ -14,13 +14,8 @@ const Register = () => {
     e.preventDefault();
     setError('');
 
-    if (!formData.name || !formData.password) {
-      setError('Name and password are required');
-      return;
-    }
-
-    if (!formData.email && !formData.phone) {
-      setError('Email or phone is required');
+    if (!formData.name || !formData.email || !formData.password) {
+      setError('All fields are required');
       return;
     }
 
@@ -36,7 +31,7 @@ const Register = () => {
 
     try {
       setLoading(true);
-      await register(formData.name, formData.email, formData.phone, formData.password);
+      await register(formData.name, formData.email, '', formData.password);
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed. Please try again.');
@@ -46,88 +41,154 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-500/5 to-emerald-600/5 flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <div className="bg-card rounded-xl shadow-lg p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
+    <div className="min-h-screen bg-[#020617] flex">
+      <div className="hidden lg:flex lg:w-1/2 bg-[#0F172A] items-center justify-center p-12">
+        <div className="max-w-md">
+          <div className="mb-8">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-[#10B981] to-[#34D399] bg-clip-text text-transparent mb-4">
               EasyXpense
             </h1>
-            <p className="text-sm text-text-muted">
-              Create your account to get started
+            <p className="text-xl text-[#94A3B8] leading-relaxed">
+              Split expenses with friends effortlessly.
             </p>
           </div>
-
-          {error && (
-            <div className="mb-6 p-4 bg-red-900/20 border border-red-800 rounded-lg">
-              <p className="text-sm text-red-400">{error}</p>
+          <div className="space-y-6 text-[#94A3B8]">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-lg bg-[#10B981]/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-2xl">💰</span>
+              </div>
+              <div>
+                <h3 className="text-[#E2E8F0] font-semibold mb-1">Track Expenses</h3>
+                <p className="text-sm">Keep track of shared expenses with friends and groups</p>
+              </div>
             </div>
-          )}
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-lg bg-[#10B981]/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-2xl">📊</span>
+              </div>
+              <div>
+                <h3 className="text-[#E2E8F0] font-semibold mb-1">Settle Debts</h3>
+                <p className="text-sm">See who owes what and settle up easily</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-lg bg-[#10B981]/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-2xl">📱</span>
+              </div>
+              <div>
+                <h3 className="text-[#E2E8F0] font-semibold mb-1">Payment History</h3>
+                <p className="text-sm">Keep track of all payments and settlements</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <Input
-              label="Full Name"
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="John Doe"
-              required
-            />
-
-            <Input
-              label="Email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="your@email.com"
-            />
-
-            <div className="text-center text-sm text-text-muted">
-              OR
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-md">
+          <div className="bg-[#0F172A] rounded-xl shadow-xl p-8 space-y-6">
+            <div>
+              <h2 className="text-3xl font-bold text-[#E2E8F0] mb-2">Create account</h2>
+              <p className="text-[#94A3B8]">Start splitting expenses with friends</p>
             </div>
 
-            <Input
-              label="Phone"
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              placeholder="+91 1234567890"
-            />
+            {error && (
+              <div className="p-4 bg-red-900/20 border border-red-800 rounded-lg">
+                <p className="text-sm text-red-400">{error}</p>
+              </div>
+            )}
 
-            <Input
-              label="Password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              placeholder="At least 6 characters"
-              required
-            />
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-[#E2E8F0] mb-2">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={20} />
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="John Doe"
+                    className="w-full h-11 pl-12 pr-4 bg-[#020617] border border-slate-700 rounded-lg text-[#E2E8F0] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#10B981] transition-all"
+                    required
+                  />
+                </div>
+              </div>
 
-            <Input
-              label="Confirm Password"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-              placeholder="Re-enter password"
-              required
-            />
+              <div>
+                <label className="block text-sm font-medium text-[#E2E8F0] mb-2">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={20} />
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="your@email.com"
+                    className="w-full h-11 pl-12 pr-4 bg-[#020617] border border-slate-700 rounded-lg text-[#E2E8F0] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#10B981] transition-all"
+                    required
+                  />
+                </div>
+              </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-11 bg-primary hover:bg-accent disabled:bg-gray-400 text-white font-medium rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Creating account...' : 'Register'}
-            </button>
-          </form>
+              <div>
+                <label className="block text-sm font-medium text-[#E2E8F0] mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={20} />
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="At least 6 characters"
+                    className="w-full h-11 pl-12 pr-4 bg-[#020617] border border-slate-700 rounded-lg text-[#E2E8F0] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#10B981] transition-all"
+                    required
+                  />
+                </div>
+              </div>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-text-muted">
-              Already have an account?{' '}
-              <Link to="/login" className="text-primary hover:text-accent font-medium transition-colors duration-200">
-                Login here
-              </Link>
-            </p>
+              <div>
+                <label className="block text-sm font-medium text-[#E2E8F0] mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={20} />
+                  <input
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    placeholder="Re-enter password"
+                    className="w-full h-11 pl-12 pr-4 bg-[#020617] border border-slate-700 rounded-lg text-[#E2E8F0] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#10B981] transition-all"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full h-11 bg-[#10B981] hover:bg-[#34D399] disabled:bg-gray-600 text-white font-medium rounded-lg transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading ? 'Creating account...' : (
+                  <>
+                    Create account
+                    <ArrowRight size={20} />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="text-center">
+              <p className="text-sm text-[#94A3B8]">
+                Already have an account?{' '}
+                <Link to="/login" className="text-[#10B981] hover:text-[#34D399] font-medium transition-colors">
+                  Login
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>
