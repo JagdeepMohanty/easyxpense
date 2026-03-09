@@ -14,7 +14,38 @@ def get_expenses():
         page = int(request.args.get('page', 1))
         limit = int(request.args.get('limit', 10))
         
+        # Build query with filters
         query = {'user_id': request.user_id}
+        
+        # Date range filter
+        date_from = request.args.get('date_from')
+        date_to = request.args.get('date_to')
+        if date_from or date_to:
+            query['date'] = {}
+            if date_from:
+                query['date']['$gte'] = datetime.fromisoformat(date_from.replace('Z', '+00:00'))
+            if date_to:
+                query['date']['$lte'] = datetime.fromisoformat(date_to.replace('Z', '+00:00'))
+        
+        # Category filter
+        category = request.args.get('category')
+        if category:
+            query['category'] = category
+        
+        # Amount range filter
+        min_amount = request.args.get('min_amount')
+        max_amount = request.args.get('max_amount')
+        if min_amount or max_amount:
+            query['amount'] = {}
+            if min_amount:
+                query['amount']['$gte'] = float(min_amount)
+            if max_amount:
+                query['amount']['$lte'] = float(max_amount)
+        
+        # Friend filter
+        friend = request.args.get('friend')
+        if friend:
+            query['friends'] = {'$in': [friend]}
         
         total = current_app.db.expenses.count_documents(query)
         expenses = list(current_app.db.expenses.find(query)
@@ -47,6 +78,7 @@ def create_expense():
         category = data.get('category')
         date = data.get('date')
         friends = data.get('friends', [])
+        group_id = data.get('group_id')
         
         if not all([amount, description, category]):
             return jsonify({'error': 'Amount, description, and category are required'}), 400
@@ -62,9 +94,21 @@ def create_expense():
         expense_data = Expense.create(request.user_id, amount, description, category, friends, expense_date)
         
         result = current_app.db.expenses.insert_one(expense_data)
+        expense_id = str(result.inserted_id)
+        
+        # Emit realtime update
+        from app.socketio_extension import emit_expense_added
+        emit_expense_added(request.user_id, group_id, {
+            'id': expense_id,
+            'amount': amount,
+            'description': description,
+            'category': category,
+            'date': expense_date.isoformat(),
+            'friends': friends
+        })
         
         return jsonify({
-            'id': str(result.inserted_id),
+            'id': expense_id,
             'message': 'Expense created successfully'
         }), 201
         

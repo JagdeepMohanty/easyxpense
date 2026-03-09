@@ -58,6 +58,16 @@ def create_settlement():
         
         result = settlements_collection.insert_one(settlement_data)
         
+        # Emit realtime update
+        from app.socketio_extension import emit_debt_settled
+        emit_debt_settled(user['_id'], group_id, {
+            'id': str(result.inserted_id),
+            'from_user': from_user,
+            'to_user': to_user,
+            'amount': paisa_to_rupees(amount_paisa),
+            'date': settlement_data['date'].isoformat()
+        })
+        
         return jsonify({
             'success': True,
             'message': 'Settlement created successfully',

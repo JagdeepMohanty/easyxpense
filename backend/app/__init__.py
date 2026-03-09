@@ -68,6 +68,9 @@ def create_app():
     from app.routes.debts import debts_bp
     from app.routes.friends import friends_bp
     from app.routes.analytics import analytics_bp
+    from app.routes.reminders import reminders_bp
+    from app.routes.settlements import settlements_bp
+    from app.routes.search import search_bp
     
     limiter.limit("5 per minute")(auth_bp)
     
@@ -78,6 +81,17 @@ def create_app():
     app.register_blueprint(debts_bp, url_prefix="/api/debts")
     app.register_blueprint(friends_bp, url_prefix="/api/friends")
     app.register_blueprint(analytics_bp, url_prefix="/api/analytics")
+    app.register_blueprint(reminders_bp, url_prefix="/api/reminders")
+    app.register_blueprint(settlements_bp, url_prefix="/api")
+    app.register_blueprint(search_bp, url_prefix="/api")
+    
+    # Initialize Socket.IO
+    from app.socketio_extension import init_socketio
+    init_socketio(app)
+    
+    # Start reminder scheduler
+    from app.services.reminder_scheduler import start_scheduler
+    start_scheduler()
     
     # Health check endpoint
     @app.route("/api/health")
