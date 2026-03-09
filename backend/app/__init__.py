@@ -71,6 +71,7 @@ def create_app():
     from app.routes.reminders import reminders_bp
     from app.routes.settlements import settlements_bp
     from app.routes.search import search_bp
+    from app.routes.debt_graph import debt_graph_bp
     
     limiter.limit("5 per minute")(auth_bp)
     
@@ -84,6 +85,7 @@ def create_app():
     app.register_blueprint(reminders_bp, url_prefix="/api/reminders")
     app.register_blueprint(settlements_bp, url_prefix="/api")
     app.register_blueprint(search_bp, url_prefix="/api")
+    app.register_blueprint(debt_graph_bp, url_prefix="/api")
     
     # Initialize Socket.IO
     from app.socketio_extension import init_socketio
