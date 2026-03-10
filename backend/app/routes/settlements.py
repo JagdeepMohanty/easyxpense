@@ -10,7 +10,7 @@ settlements_bp = Blueprint('settlements', __name__)
 @token_required
 def create_settlement():
     current_app.logger.info('Creating new settlement')
-    user = request.current_user
+    user_id = request.user_id
     data = request.get_json()
     current_app.logger.info(f'Settlement data received: {data}')
     
@@ -43,7 +43,7 @@ def create_settlement():
         settlements_collection = current_app.db.settlements
         
         settlement_data = {
-            'user_id': user['_id'],
+            'user_id': user_id,
             'fromUser': from_user,
             'toUser': to_user,
             'amount_paisa': amount_paisa,  # Store as integer paisa
@@ -76,7 +76,7 @@ def create_settlement():
 @settlements_bp.route('/settlements', methods=['GET'])
 @token_required
 def get_settlements():
-    user = request.current_user
+    user_id = request.user_id
     group_id = request.args.get('group_id')
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 10))
@@ -90,7 +90,7 @@ def get_settlements():
             return jsonify({'error': 'Database not available'}), 503
             
         settlements_collection = current_app.db.settlements
-        query = {'user_id': user['_id']}
+        query = {'user_id': user_id}
         if group_id:
             query['group_id'] = group_id
         
